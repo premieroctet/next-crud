@@ -1,0 +1,35 @@
+{
+  "name": "next-crud",
+  "version": "1.0.0",
+  "description": "Next.js CRUD routes generation helper",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "repository": "https://github.com/premieroctet/next-crud.git",
+  "author": "Hugo FOYART <hfoyart@premieroctet.com>",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint",
+    "prepublishOnly": "yarn lint && yarn build"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.8.1",
+    "@typescript-eslint/parser": "^4.8.1",
+    "eslint": "^7.14.0",
+    "husky": ">=4",
+    "lint-staged": ">=10",
+    "typescript": "^4.1.2"
+  },
+  "peerDependencies": {
+    "prisma": "^2.0.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "./src/*.ts": "eslint --cache --fix"
+  }
+}
