@@ -13,6 +13,8 @@
   "rules": {
     "arrow-parens": "off",
     "semi": "off",
-    "comma-dangle": "off"
+    "comma-dangle": "off",
+    "@typescript-eslint/ban-ts-comment": "off",
+    "@typescript-eslint/no-empty-interface": "off"
   }
 }
