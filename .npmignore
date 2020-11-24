@@ -1,2 +1,10 @@
 src
 tsconfig.json
+jest.config.json
+.prettierrc
+.gitignore
+.eslintrc.json
+.eslintcache
+example
+.github
+__tests__
