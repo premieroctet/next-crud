@@ -1,11 +1,11 @@
-import { HandlerParams } from '../types'
+import { IHandlerParams } from '../types'
 
-interface UpdateHandler<T> extends HandlerParams<T> {}
+interface IUpdateHandler<T> extends IHandlerParams<T> {}
 
 function updateHandler<T>({
   prismaDelegate,
   response,
-}: UpdateHandler<T>): void {
+}: IUpdateHandler<T>): void {
   response.send('Update handler')
 }
 
