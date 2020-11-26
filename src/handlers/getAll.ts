@@ -1,12 +1,14 @@
-import { HandlerParams } from '../types'
+import { IHandlerParams } from '../types'
 
-interface GetAllHandler<T> extends HandlerParams<T> {}
+interface IGetAllHandler<T> extends IHandlerParams<T> {}
 
-function getAllHandler<T>({
+async function getAllHandler<T>({
   prismaDelegate,
   response,
-}: GetAllHandler<T>): void {
-  response.send('Get all handlers')
+}: IGetAllHandler<T>): Promise<void> {
+  const resources = await prismaDelegate.findMany()
+
+  response.status(200).send(resources)
 }
 
 export default getAllHandler

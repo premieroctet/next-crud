@@ -8,25 +8,27 @@ import {
   getOneHandler,
   updateHandler,
 } from './handlers'
-import { RouteType } from './types'
+import { IHandlerParams, RouteType } from './types'
 import { getRouteType } from './utils'
 
-const prisma = new PrismaClient()
-
 interface INextCrudOptions {
-  modelName: keyof typeof prisma
+  modelName: keyof PrismaClient
   resourceName: string
+  primaryKey?: string
 }
 
-function NextCrud<T, U>({
+function NextCrud<T>({
   modelName,
   resourceName,
-}: INextCrudOptions): NextApiHandler<U> {
-  const handler: NextApiHandler = (req, res) => {
+  primaryKey = 'id',
+}: INextCrudOptions): NextApiHandler<T> {
+  const handler: NextApiHandler = async (req, res) => {
+    const prisma = new PrismaClient()
+
     if (modelName in prisma) {
       const db = prisma[modelName] as Record<PrismaAction, () => Promise<T>>
 
-      const { url, method, query } = req
+      const { url, method, query, body } = req
 
       try {
         const { routeType } = getRouteType({
@@ -35,21 +37,26 @@ function NextCrud<T, U>({
           resourceName,
         })
 
+        const params: IHandlerParams<T> = {
+          prismaDelegate: db,
+          response: res,
+        }
+
         switch (routeType) {
           case RouteType.READ_ONE:
-            getOneHandler({ prismaDelegate: db, response: res })
+            getOneHandler(params)
             break
           case RouteType.READ_ALL:
-            getAllHandler({ prismaDelegate: db, response: res })
+            await getAllHandler<T>(params)
             break
           case RouteType.CREATE:
-            createHandler({ prismaDelegate: db, response: res })
+            await createHandler<T>({ ...params, body })
             break
           case RouteType.UPDATE:
-            updateHandler({ prismaDelegate: db, response: res })
+            updateHandler(params)
             break
           case RouteType.DELETE:
-            deleteHandler({ prismaDelegate: db, response: res })
+            deleteHandler(params)
             break
           case null:
             res.status(404)

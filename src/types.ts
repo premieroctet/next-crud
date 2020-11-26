@@ -10,7 +10,7 @@ export enum RouteType {
   DELETE = 'DELETE',
 }
 
-export interface HandlerParams<T> {
-  prismaDelegate: Record<PrismaAction, () => Promise<T>>
+export interface IHandlerParams<T> {
+  prismaDelegate: Record<PrismaAction, (...args: any[]) => Promise<T>>
   response: NextApiResponse
 }

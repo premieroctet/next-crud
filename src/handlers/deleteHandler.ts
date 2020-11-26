@@ -1,11 +1,11 @@
-import { HandlerParams } from '../types'
+import { IHandlerParams } from '../types'
 
-interface DeleteHandler<T> extends HandlerParams<T> {}
+interface IDeleteHandler<T> extends IHandlerParams<T> {}
 
 function deleteHandler<T>({
   prismaDelegate,
   response,
-}: DeleteHandler<T>): void {
+}: IDeleteHandler<T>): void {
   response.send('Delete handler')
 }
 

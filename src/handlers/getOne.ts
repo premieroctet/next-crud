@@ -1,11 +1,11 @@
-import { HandlerParams } from '../types'
+import { IHandlerParams } from '../types'
 
-interface GetOneHandler<T> extends HandlerParams<T> {}
+interface IGetOneHandler<T> extends IHandlerParams<T> {}
 
 function getOneHandler<T>({
   prismaDelegate,
   response,
-}: GetOneHandler<T>): void {
+}: IGetOneHandler<T>): void {
   response.send('Get one handler')
 }
 
