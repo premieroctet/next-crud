@@ -23,6 +23,7 @@ describe('getRouteType without query params', () => {
       })
     ).toEqual<GetRouteType>({
       routeType: RouteType.READ_ONE,
+      resourceId: '1',
     })
   })
 
@@ -47,6 +48,7 @@ describe('getRouteType without query params', () => {
       })
     ).toEqual<GetRouteType>({
       routeType: RouteType.UPDATE,
+      resourceId: '1',
     })
 
     expect(
@@ -57,6 +59,7 @@ describe('getRouteType without query params', () => {
       })
     ).toEqual<GetRouteType>({
       routeType: RouteType.UPDATE,
+      resourceId: '1',
     })
   })
 
@@ -69,6 +72,7 @@ describe('getRouteType without query params', () => {
       })
     ).toEqual<GetRouteType>({
       routeType: RouteType.DELETE,
+      resourceId: '1',
     })
   })
 })
@@ -95,6 +99,7 @@ describe('getRouteType with query params', () => {
       })
     ).toEqual<GetRouteType>({
       routeType: RouteType.READ_ONE,
+      resourceId: '1',
     })
   })
 
@@ -119,6 +124,7 @@ describe('getRouteType with query params', () => {
       })
     ).toEqual<GetRouteType>({
       routeType: RouteType.UPDATE,
+      resourceId: '1',
     })
 
     expect(
@@ -129,6 +135,7 @@ describe('getRouteType with query params', () => {
       })
     ).toEqual<GetRouteType>({
       routeType: RouteType.UPDATE,
+      resourceId: '1',
     })
   })
 
@@ -141,6 +148,7 @@ describe('getRouteType with query params', () => {
       })
     ).toEqual<GetRouteType>({
       routeType: RouteType.DELETE,
+      resourceId: '1',
     })
   })
 })
