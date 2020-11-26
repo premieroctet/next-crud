@@ -24,6 +24,7 @@
     "yup": "^0.31.0"
   },
   "devDependencies": {
+    "@prisma/cli": "^2.12.1",
     "@types/node": "^12.12.21",
     "@types/react": "^16.9.16",
     "@types/react-dom": "^16.9.4",
