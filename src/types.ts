@@ -14,3 +14,8 @@ export interface IHandlerParams<T> {
   prismaDelegate: Record<PrismaAction, (...args: any[]) => Promise<T>>
   response: NextApiResponse
 }
+
+export interface IUniqueResourceHandlerParams<T> extends IHandlerParams<T> {
+  resourceId: string | number
+  primaryKey: string
+}

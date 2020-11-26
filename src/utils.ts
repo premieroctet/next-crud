@@ -8,6 +8,7 @@ interface GetRouteTypeParams {
 
 export interface GetRouteType {
   routeType: RouteType
+  resourceId?: string
 }
 
 export const getRouteType = ({
@@ -24,6 +25,8 @@ export const getRouteType = ({
     )
   }
 
+  const [resourceId] = realPath.split('/').reverse()
+
   switch (method) {
     case 'GET': {
       const pathMatch = realPath.match(new RegExp(`/${resourceName}(/.*)?`))
@@ -31,6 +34,7 @@ export const getRouteType = ({
       if (pathMatch && pathMatch[1]) {
         return {
           routeType: RouteType.READ_ONE,
+          resourceId,
         }
       }
 
@@ -56,6 +60,7 @@ export const getRouteType = ({
       if (pathMatch) {
         return {
           routeType: RouteType.UPDATE,
+          resourceId,
         }
       }
 
@@ -67,6 +72,7 @@ export const getRouteType = ({
       if (pathMatch) {
         return {
           routeType: RouteType.DELETE,
+          resourceId,
         }
       }
 
@@ -76,4 +82,8 @@ export const getRouteType = ({
       return null
     }
   }
+}
+
+export const formatResourceId = (resourceId: string): string | number => {
+  return Number.isSafeInteger(+resourceId) ? +resourceId : resourceId
 }

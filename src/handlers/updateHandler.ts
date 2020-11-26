@@ -1,12 +1,24 @@
-import { IHandlerParams } from '../types'
+import { IUniqueResourceHandlerParams } from '../types'
 
-interface IUpdateHandler<T> extends IHandlerParams<T> {}
+interface IUpdateHandler<T> extends IUniqueResourceHandlerParams<T> {
+  body: Partial<T>
+}
 
-function updateHandler<T>({
+async function updateHandler<T>({
   prismaDelegate,
   response,
-}: IUpdateHandler<T>): void {
-  response.send('Update handler')
+  body,
+  resourceId,
+  primaryKey,
+}: IUpdateHandler<T>): Promise<void> {
+  const updatedResource = await prismaDelegate.update({
+    where: {
+      [primaryKey]: resourceId,
+    },
+    data: body,
+  })
+
+  response.send(updatedResource)
 }
 
 export default updateHandler
