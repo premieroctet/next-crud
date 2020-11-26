@@ -1,15 +1,23 @@
-import Link from 'next/link'
+import { Button, Heading, VStack } from '@chakra-ui/react'
+import { useRouter } from 'next/router'
+import React from 'react'
 import Layout from '../components/Layout'
 
-const IndexPage = () => (
-  <Layout title="Home | Next.js + TypeScript Example">
-    <h1>Hello Next.js 👋</h1>
-    <p>
-      <Link href="/about">
-        <a>About</a>
-      </Link>
-    </p>
-  </Layout>
-)
+const Home = () => {
+  const { push } = useRouter()
 
-export default IndexPage
+  return (
+    <Layout title="Home">
+      <VStack spacing={6} flex={1}>
+        <Heading>next-crud example</Heading>
+        <VStack spacing={4} w="100%" px={7}>
+          <Button isFullWidth colorScheme="blue" onClick={() => push('/users')}>
+            Users
+          </Button>
+        </VStack>
+      </VStack>
+    </Layout>
+  )
+}
+
+export default Home
