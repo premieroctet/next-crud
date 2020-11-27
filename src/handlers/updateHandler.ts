@@ -5,18 +5,13 @@ interface IUpdateHandler<T> extends IUniqueResourceHandlerParams<T> {
 }
 
 async function updateHandler<T>({
-  prismaDelegate,
+  adapter,
   response,
   body,
   resourceId,
-  primaryKey,
+  query,
 }: IUpdateHandler<T>): Promise<void> {
-  const updatedResource = await prismaDelegate.update({
-    where: {
-      [primaryKey]: resourceId,
-    },
-    data: body,
-  })
+  const updatedResource = await adapter.update(resourceId, body, query)
 
   response.send(updatedResource)
 }

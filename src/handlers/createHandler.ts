@@ -5,13 +5,12 @@ interface ICreateHandler<T> extends IHandlerParams<T> {
 }
 
 async function createHandler<T>({
-  prismaDelegate,
+  adapter,
   response,
   body,
+  query,
 }: ICreateHandler<T>): Promise<void> {
-  const createdResource = await prismaDelegate.create({
-    data: body,
-  })
+  const createdResource = await adapter.create(body, query)
 
   response.status(201).send(createdResource)
 }

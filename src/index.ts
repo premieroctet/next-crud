@@ -1,5 +1,4 @@
 // @ts-ignore
-import { PrismaClient, PrismaAction } from '@prisma/client'
 import { NextApiHandler } from 'next'
 import {
   createHandler,
@@ -8,84 +7,75 @@ import {
   getOneHandler,
   updateHandler,
 } from './handlers'
-import { IHandlerParams, RouteType } from './types'
+import { parseQuery } from './queryParser'
+import { IAdapter, IHandlerParams, RouteType } from './types'
 import { getRouteType, formatResourceId as formatResourceIdUtil } from './utils'
 
-interface INextCrudOptions {
-  modelName: keyof PrismaClient
+interface INextCrudOptions<T> {
+  adapter: IAdapter<T>
   resourceName: string
-  primaryKey?: string
   formatResourceId?: (resourceId: string) => string | number
 }
 
 function NextCrud<T>({
-  modelName,
+  adapter,
   resourceName,
-  primaryKey = 'id',
   formatResourceId = formatResourceIdUtil,
-}: INextCrudOptions): NextApiHandler<T> {
+}: INextCrudOptions<T>): NextApiHandler<T> {
   const handler: NextApiHandler = async (req, res) => {
-    const prisma = new PrismaClient()
+    const { url, method, body } = req
 
-    if (modelName in prisma) {
-      const db = prisma[modelName] as Record<PrismaAction, () => Promise<T>>
+    try {
+      const { routeType, resourceId } = getRouteType({
+        url,
+        method,
+        resourceName,
+      })
 
-      const { url, method, query, body } = req
+      const parsedQuery = parseQuery(url.split('?')[1])
 
-      try {
-        const { routeType, resourceId } = getRouteType({
-          url,
-          method,
-          resourceName,
-        })
-
-        const params: IHandlerParams<T> = {
-          prismaDelegate: db,
-          response: res,
-        }
-
-        const resourceIdFormatted = formatResourceId(resourceId)
-
-        switch (routeType) {
-          case RouteType.READ_ONE:
-            await getOneHandler({
-              ...params,
-              resourceId: resourceIdFormatted,
-              primaryKey,
-            })
-            break
-          case RouteType.READ_ALL:
-            await getAllHandler<T>(params)
-            break
-          case RouteType.CREATE:
-            await createHandler<T>({ ...params, body })
-            break
-          case RouteType.UPDATE:
-            await updateHandler({
-              ...params,
-              resourceId: resourceIdFormatted,
-              primaryKey,
-              body,
-            })
-            break
-          case RouteType.DELETE:
-            await deleteHandler({
-              ...params,
-              resourceId: resourceIdFormatted,
-              primaryKey,
-            })
-            break
-          case null:
-            res.status(404)
-            break
-        }
-      } catch (e) {
-        res.status(500).send(e)
-      } finally {
-        res.end()
+      const params: IHandlerParams<T> = {
+        response: res,
+        adapter,
+        query: parsedQuery,
       }
-    } else {
-      throw new Error('modelName must be part of your prisma object')
+
+      const resourceIdFormatted = formatResourceId(resourceId)
+
+      switch (routeType) {
+        case RouteType.READ_ONE:
+          await getOneHandler({
+            ...params,
+            resourceId: resourceIdFormatted,
+          })
+          break
+        case RouteType.READ_ALL:
+          await getAllHandler<T>(params)
+          break
+        case RouteType.CREATE:
+          await createHandler<T>({ ...params, body })
+          break
+        case RouteType.UPDATE:
+          await updateHandler({
+            ...params,
+            resourceId: resourceIdFormatted,
+            body,
+          })
+          break
+        case RouteType.DELETE:
+          await deleteHandler({
+            ...params,
+            resourceId: resourceIdFormatted,
+          })
+          break
+        case null:
+          res.status(404)
+          break
+      }
+    } catch (e) {
+      res.status(500).send(e)
+    } finally {
+      res.end()
     }
   }
   return handler

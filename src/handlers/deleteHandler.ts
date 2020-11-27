@@ -3,16 +3,12 @@ import { IUniqueResourceHandlerParams } from '../types'
 interface IDeleteHandler<T> extends IUniqueResourceHandlerParams<T> {}
 
 async function deleteHandler<T>({
-  prismaDelegate,
+  adapter,
   response,
   resourceId,
-  primaryKey,
+  query,
 }: IDeleteHandler<T>): Promise<void> {
-  const deletedResource = await prismaDelegate.delete({
-    where: {
-      [primaryKey]: resourceId,
-    },
-  })
+  const deletedResource = await adapter.delete(resourceId, query)
 
   response.send(deletedResource)
 }

@@ -1,5 +1,3 @@
-// @ts-ignore
-import type { PrismaAction } from '@prisma/client'
 import { NextApiResponse } from 'next'
 
 export enum RouteType {
@@ -11,11 +9,33 @@ export enum RouteType {
 }
 
 export interface IHandlerParams<T> {
-  prismaDelegate: Record<PrismaAction, (...args: any[]) => Promise<T>>
+  adapter: IAdapter<T>
   response: NextApiResponse
+  query: IParsedQueryParams
 }
 
 export interface IUniqueResourceHandlerParams<T> extends IHandlerParams<T> {
   resourceId: string | number
-  primaryKey: string
+}
+
+export interface IAdapter<T> {
+  getAll(query?: IParsedQueryParams): Promise<T>
+  getOne(resourceId: string | number, query?: IParsedQueryParams): Promise<T>
+  create(data: any, query?: IParsedQueryParams): Promise<T>
+  update(
+    resourceId: string | number,
+    data: any,
+    query?: IParsedQueryParams
+  ): Promise<T>
+  delete(resourceId: string | number, query?: IParsedQueryParams): Promise<T>
+}
+
+// Query parsing types
+
+export type TSelect = {
+  [key: string]: boolean | TSelect
+}
+
+export interface IParsedQueryParams {
+  select?: TSelect
 }
