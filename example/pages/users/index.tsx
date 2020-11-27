@@ -1,37 +1,91 @@
-import { GetStaticProps } from 'next'
-import Link from 'next/link'
-
-import { User } from '../../interfaces'
-import { sampleUserData } from '../../utils/sample-data'
+import { AddIcon } from '@chakra-ui/icons'
+import {
+  Box,
+  Button,
+  Center,
+  Container,
+  Flex,
+  Heading,
+  Skeleton,
+  Stack,
+  VStack,
+} from '@chakra-ui/react'
+import { User } from '@prisma/client'
+import { GetServerSideProps, NextPage } from 'next'
+import { useRouter } from 'next/router'
+import React from 'react'
+import useSWR from 'swr'
 import Layout from '../../components/Layout'
-import List from '../../components/List'
+import UserListItem from '../../components/users/UserListItem'
 
-type Props = {
-  items: User[]
+interface IProps {
+  users: User[]
 }
 
-const WithStaticProps = ({ items }: Props) => (
-  <Layout title="Users List | Next.js + TypeScript Example">
-    <h1>Users List</h1>
-    <p>
-      Example fetching data from inside <code>getStaticProps()</code>.
-    </p>
-    <p>You are currently on: /users</p>
-    <List items={items} />
-    <p>
-      <Link href="/">
-        <a>Go home</a>
-      </Link>
-    </p>
-  </Layout>
-)
+const Users: NextPage<IProps> = ({ users }) => {
+  const { push } = useRouter()
+  const { data, mutate } = useSWR<User[]>('/api/users', { initialData: users })
 
-export const getStaticProps: GetStaticProps = async () => {
-  // Example for including static props in a Next.js function component page.
-  // Don't forget to include the respective types for any props passed into
-  // the component.
-  const items: User[] = sampleUserData
-  return { props: { items } }
+  const onEditUser = (id: User['id']) => {
+    push(`/users/${id}`)
+  }
+
+  const onDeleteUser = async (id: User['id']) => {
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${id}`, {
+      method: 'DELETE',
+    })
+    mutate(data?.filter((user) => user.id !== id))
+  }
+
+  return (
+    <Layout title="Users" backRoute="/">
+      <VStack spacing={6} width="100%">
+        <Heading>Users</Heading>
+        <Flex direction="row" justify="flex-end" width="100%">
+          <Button
+            colorScheme="green"
+            leftIcon={<AddIcon color="white" />}
+            onClick={() => push('/users/create')}
+          >
+            Create user
+          </Button>
+        </Flex>
+        <VStack
+          boxShadow="0px 2px 8px #ccc"
+          p={4}
+          borderRadius={6}
+          width="100%"
+          align="flex-start"
+        >
+          {!data && (
+            <Stack width="100%">
+              <Skeleton height="20px" />
+              <Skeleton height="20px" />
+              <Skeleton height="20px" />
+            </Stack>
+          )}
+          {data?.map((user) => (
+            <UserListItem
+              key={user.id}
+              {...user}
+              onEdit={onEditUser}
+              onDelete={onDeleteUser}
+            />
+          ))}
+        </VStack>
+      </VStack>
+    </Layout>
+  )
 }
 
-export default WithStaticProps
+export const getServerSideProps: GetServerSideProps<IProps> = async () => {
+  const users = await fetch(`${process.env.API_URL}/users`).then((res) =>
+    res.json()
+  )
+
+  return {
+    props: { users },
+  }
+}
+
+export default Users
