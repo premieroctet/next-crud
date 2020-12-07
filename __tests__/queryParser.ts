@@ -40,3 +40,39 @@ describe('Parse select', () => {
     })
   })
 })
+
+describe('Parse where', () => {
+  it('should parse a simple where condition', () => {
+    const query = 'where={"username": "foo"}'
+
+    expect(parseQuery(query)).toEqual<IParsedQueryParams>({
+      where: {
+        username: 'foo',
+      },
+    })
+  })
+
+  it('should parse where condition with operators', () => {
+    const query = 'where={"age": {"$gt": 18}}'
+
+    expect(parseQuery(query)).toEqual<IParsedQueryParams>({
+      where: {
+        age: { $gt: 18 },
+      },
+    })
+  })
+
+  it('should parse where nested field', () => {
+    const query = 'where={"user.age": {"$gt": 18}}'
+
+    expect(parseQuery(query)).toEqual<IParsedQueryParams>({
+      where: {
+        user: {
+          age: {
+            $gt: 18,
+          },
+        },
+      },
+    })
+  })
+})

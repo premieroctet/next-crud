@@ -33,7 +33,38 @@ export type TRecursiveField = {
   [key: string]: boolean | TRecursiveField
 }
 
+export type TWhereOperator =
+  | '$eq'
+  | '$neq'
+  | '$in'
+  | '$notin'
+  | '$lt'
+  | '$lte'
+  | '$gt'
+  | '$gte'
+  | '$cont'
+  | '$starts'
+  | '$ends'
+  | '$isnull'
+  | '$notnull'
+
+type TSearchCondition = string | boolean | number
+
+export type TWhereCondition = {
+  [key in TWhereOperator]?: TSearchCondition
+}
+
+export type TCondition = {
+  [key: string]: TSearchCondition | TWhereCondition | TCondition
+}
+
+export type TWhereField = TCondition & {
+  $and?: TCondition[]
+  $or?: TCondition[] | TWhereCondition
+}
+
 export interface IParsedQueryParams {
   select?: TRecursiveField
   include?: TRecursiveField
+  where?: TWhereField
 }
