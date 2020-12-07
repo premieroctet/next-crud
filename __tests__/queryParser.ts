@@ -41,6 +41,46 @@ describe('Parse select', () => {
   })
 })
 
+describe('Parse include', () => {
+  it('should parse simple include', () => {
+    const query = 'include=user,post'
+
+    expect(parseQuery(query)).toEqual<IParsedQueryParams>({
+      include: {
+        user: true,
+        post: true,
+      },
+    })
+  })
+
+  it('should parse nested select', () => {
+    let query = 'include=user,post.user,post.title'
+
+    expect(parseQuery(query)).toEqual<IParsedQueryParams>({
+      include: {
+        user: true,
+        post: {
+          user: true,
+          title: true,
+        },
+      },
+    })
+
+    query = 'include=user,post.user,post.user.post'
+
+    expect(parseQuery(query)).toEqual<IParsedQueryParams>({
+      include: {
+        user: true,
+        post: {
+          user: {
+            post: true,
+          },
+        },
+      },
+    })
+  })
+})
+
 describe('Parse where', () => {
   it('should parse a simple where condition', () => {
     const query = 'where={"username": "foo"}'

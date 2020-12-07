@@ -22,12 +22,6 @@ const parseWhere = (where: string): TWhereField => {
   const whereStr = JSON.parse(where)
   const parsed: TWhereField = {}
 
-  /**
-   * TODO:
-   * - Determine if we have an array or an object
-   * - Set the criteria to the parsed key
-   */
-
   Object.keys(whereStr).forEach((key) => {
     set(parsed, key, whereStr[key])
   })
