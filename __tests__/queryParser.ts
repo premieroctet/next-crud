@@ -20,10 +20,8 @@ describe('Parse select', () => {
       select: {
         user: true,
         post: {
-          select: {
-            user: true,
-            title: true,
-          },
+          user: true,
+          title: true,
         },
       },
     })
@@ -34,12 +32,8 @@ describe('Parse select', () => {
       select: {
         user: true,
         post: {
-          select: {
-            user: {
-              select: {
-                post: true,
-              },
-            },
+          user: {
+            post: true,
           },
         },
       },

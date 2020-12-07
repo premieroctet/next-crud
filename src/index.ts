@@ -37,7 +37,7 @@ function NextCrud<T>({
       const params: IHandlerParams<T> = {
         response: res,
         adapter,
-        query: parsedQuery,
+        query: adapter.parseQuery(parsedQuery),
       }
 
       const resourceIdFormatted = formatResourceId(resourceId)

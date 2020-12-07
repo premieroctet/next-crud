@@ -18,24 +18,22 @@ export interface IUniqueResourceHandlerParams<T> extends IHandlerParams<T> {
   resourceId: string | number
 }
 
-export interface IAdapter<T> {
-  getAll(query?: IParsedQueryParams): Promise<T>
-  getOne(resourceId: string | number, query?: IParsedQueryParams): Promise<T>
-  create(data: any, query?: IParsedQueryParams): Promise<T>
-  update(
-    resourceId: string | number,
-    data: any,
-    query?: IParsedQueryParams
-  ): Promise<T>
-  delete(resourceId: string | number, query?: IParsedQueryParams): Promise<T>
+export interface IAdapter<T, Q = IParsedQueryParams> {
+  parseQuery(query?: IParsedQueryParams): Q
+  getAll(query?: Q): Promise<T>
+  getOne(resourceId: string | number, query?: Q): Promise<T>
+  create(data: any, query?: Q): Promise<T>
+  update(resourceId: string | number, data: any, query?: Q): Promise<T>
+  delete(resourceId: string | number, query?: Q): Promise<T>
 }
 
 // Query parsing types
 
-export type TSelect = {
-  [key: string]: boolean | TSelect
+export type TRecursiveField = {
+  [key: string]: boolean | TRecursiveField
 }
 
 export interface IParsedQueryParams {
-  select?: TSelect
+  select?: TRecursiveField
+  include?: TRecursiveField
 }

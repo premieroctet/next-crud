@@ -1,38 +1,15 @@
 import * as qs from 'qs'
-import { IParsedQueryParams, TSelect } from './types'
+import set from 'lodash.set'
+import { IParsedQueryParams, TRecursiveField } from './types'
 
-const parseSelect = (select: string): TSelect => {
+const parseRecursive = (select: string): TRecursiveField => {
   if (typeof select === 'string') {
-    const selectFields: TSelect = {}
+    const selectFields: TRecursiveField = {}
 
     const fields = select.split(',')
 
     fields.forEach((field) => {
-      const parsedField = field.split('.')
-
-      if (parsedField.length > 1) {
-        const initialFieldName = parsedField[0]
-        parsedField.shift()
-        selectFields[initialFieldName] = parsedField
-          .reverse()
-          .reduce((acc, val, idx) => {
-            if (idx === 0) {
-              return {
-                select: {
-                  [val]: true,
-                },
-              }
-            } else {
-              return {
-                select: {
-                  [val]: acc,
-                },
-              }
-            }
-          }, (selectFields[initialFieldName] || {}) as TSelect)
-      } else {
-        selectFields[field] = true
-      }
+      set(selectFields, field, true)
     })
 
     return selectFields
@@ -46,7 +23,10 @@ export const parseQuery = (queryString?: string): IParsedQueryParams => {
     const query = qs.parse(queryString)
     const parsedQuery: IParsedQueryParams = {}
     if (query.select) {
-      parsedQuery.select = parseSelect(query.select as string)
+      parsedQuery.select = parseRecursive(query.select as string)
+    }
+    if (query.include) {
+      parsedQuery.include = parseRecursive(query.include as string)
     }
 
     return parsedQuery
