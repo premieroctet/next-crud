@@ -1,6 +1,6 @@
-import { TPrismaWhereField } from '../../../src/adapters/prisma/types'
-import { parsePrismaWhere } from '../../../src/adapters/prisma/utils/parseWhere'
-import { TWhereField } from '../../../src/types'
+import { TPrismaWhereField } from '../../../../src/adapters/prisma/types'
+import { parsePrismaWhere } from '../../../../src/adapters/prisma/utils/parseWhere'
+import { TWhereField } from '../../../../src/types'
 
 describe('Prisma parse where', () => {
   it('should mirror basic primitives', () => {

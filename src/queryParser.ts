@@ -1,6 +1,11 @@
 import * as qs from 'qs'
 import set from 'lodash.set'
-import { IParsedQueryParams, TRecursiveField, TWhereField } from './types'
+import {
+  IParsedQueryParams,
+  TOrderByField,
+  TRecursiveField,
+  TWhereField,
+} from './types'
 
 const parseRecursive = (select: string): TRecursiveField => {
   if (typeof select === 'string') {
@@ -19,12 +24,33 @@ const parseRecursive = (select: string): TRecursiveField => {
 }
 
 const parseWhere = (where: string): TWhereField => {
-  const whereStr = JSON.parse(where)
+  const whereObj = JSON.parse(where)
   const parsed: TWhereField = {}
 
-  Object.keys(whereStr).forEach((key) => {
-    set(parsed, key, whereStr[key])
+  Object.keys(whereObj).forEach((key) => {
+    set(parsed, key, whereObj[key])
   })
+
+  return parsed
+}
+
+const parseOrderBy = (orderBy: string): TOrderByField => {
+  const parsed: TOrderByField = {}
+  const orderByObj = JSON.parse(orderBy)
+
+  if (Object.keys(orderByObj).length >= 1) {
+    const key = Object.keys(orderByObj)[0]
+
+    if (orderByObj[key] === '$asc' || orderByObj[key] === '$desc') {
+      parsed[key] = orderByObj[key]
+    }
+  }
+
+  if (Object.keys(parsed).length !== 1) {
+    throw new Error(
+      'orderBy needs to be an object with exactly 1 property with either $asc or $desc value'
+    )
+  }
 
   return parsed
 }
@@ -41,6 +67,9 @@ export const parseQuery = (queryString?: string): IParsedQueryParams => {
     }
     if (query.where) {
       parsedQuery.where = parseWhere(query.where as string)
+    }
+    if (query.orderBy) {
+      parsedQuery.orderBy = parseOrderBy(query.orderBy as string)
     }
 
     return parsedQuery

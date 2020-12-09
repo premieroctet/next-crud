@@ -116,3 +116,21 @@ describe('Parse where', () => {
     })
   })
 })
+
+describe('Parse orderBy', () => {
+  it('should parse a correct orderBy', () => {
+    const query = 'orderBy={"username": "$asc"}'
+
+    expect(parseQuery(query)).toEqual<IParsedQueryParams>({
+      orderBy: {
+        username: '$asc',
+      },
+    })
+  })
+
+  it('should throw an error with invalid property', () => {
+    const query = 'orderBy={"id": "foo"}'
+
+    expect(() => parseQuery(query)).toThrow()
+  })
+})

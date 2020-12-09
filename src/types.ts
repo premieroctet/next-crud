@@ -63,8 +63,15 @@ export type TWhereField = TCondition & {
   $not?: TCondition | TCondition[]
 }
 
+export type TOrderByOperator = '$asc' | '$desc'
+
+export type TOrderByField = {
+  [key: string]: TOrderByOperator
+}
+
 export interface IParsedQueryParams {
   select?: TRecursiveField
   include?: TRecursiveField
   where?: TWhereField
+  orderBy?: TOrderByField
 }

@@ -83,6 +83,13 @@ We also provide 3 operators to combine multiple search:
 - `$or` (`OR`), should be an object, this will apply an `OR` condition between each properties of the object
 - `$not` (`NOT`), should be an object, this should match all the data in the database that do not match those criteria.
 
+#### orderBy
+
+A JSON representation of the field to order by and its direction. This should be an object containing only 1 key (name of the field to order by) with a valid order operator. These are the 2 available operators:
+
+- `$asc` for ascending order
+- `$desc` for descending order
+
 # Adapters
 
 An adapter is a class implementing various methods allowing you to query the data to the database your app uses.

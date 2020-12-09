@@ -2,6 +2,7 @@
 import { PrismaClient, PrismaAction, PrismaClientOptions } from '@prisma/client'
 import { IAdapter, IParsedQueryParams } from '../../types'
 import { IPrismaParsedQueryParams } from './types'
+import { parsePrismaOrderBy } from './utils/parseOrderBy'
 import { parsePrismaRecursiveField } from './utils/parseRecursive'
 import { parsePrismaWhere } from './utils/parseWhere'
 
@@ -46,6 +47,9 @@ export default class PrismaAdapter<T>
         this.manyRelations as string[]
       )
     }
+    if (query.orderBy) {
+      parsed.orderBy = parsePrismaOrderBy(query.orderBy)
+    }
 
     return parsed
   }
@@ -55,6 +59,7 @@ export default class PrismaAdapter<T>
       select: query.select,
       include: query.include,
       where: query.where,
+      orderBy: query.orderBy,
     })
 
     return results

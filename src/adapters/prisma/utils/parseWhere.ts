@@ -9,11 +9,13 @@ import {
 import { isPrimitive } from '../../../utils'
 import {
   TPrismaFieldFilter,
-  TPrismaOperator,
+  TPrismaWhereOperator,
   TPrismaWhereField,
 } from '../types'
 
-const operatorsAssociation: { [key in TWhereOperator]?: TPrismaOperator } = {
+const operatorsAssociation: {
+  [key in TWhereOperator]?: TPrismaWhereOperator
+} = {
   $eq: 'equals',
   $neq: 'not',
   $cont: 'contains',
@@ -58,7 +60,7 @@ const getSearchValue = (originalValue: any): TSearchCondition => {
 
 const parseSimpleField = (value: TCondition) => {
   const operator = Object.keys(value)[0]
-  const prismaOperator: TPrismaOperator = operatorsAssociation[operator]
+  const prismaOperator: TPrismaWhereOperator = operatorsAssociation[operator]
 
   if (prismaOperator) {
     return {

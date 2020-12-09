@@ -7,7 +7,7 @@ export type TPrismaRecursive<T extends TPrismaRecursiveField> = Record<
   boolean | { [key in T]: TPrismaRecursive<T> }
 >
 
-export type TPrismaOperator =
+export type TPrismaWhereOperator =
   | 'equals'
   | 'not'
   | 'in'
@@ -20,8 +20,10 @@ export type TPrismaOperator =
   | 'startsWith'
   | 'endsWith'
 
+export type TPrismaOrderByOperator = 'asc' | 'desc'
+
 export type TPrismaFieldFilterOperator = {
-  [key in TPrismaOperator]?: TSearchCondition
+  [key in TPrismaWhereOperator]?: TSearchCondition
 }
 
 export type TPrismaFieldFilter = {
@@ -34,8 +36,13 @@ export type TPrismaWhereField = TPrismaFieldFilter & {
   NOT?: TPrismaFieldFilter
 }
 
+export type TPrismaOrderBy = {
+  [key: string]: TPrismaOrderByOperator
+}
+
 export interface IPrismaParsedQueryParams {
   select?: TPrismaRecursive<'select'>
   include?: TPrismaRecursive<'include'>
   where?: TPrismaWhereField
+  orderBy?: TPrismaOrderBy
 }
