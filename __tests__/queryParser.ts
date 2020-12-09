@@ -134,3 +134,39 @@ describe('Parse orderBy', () => {
     expect(() => parseQuery(query)).toThrow()
   })
 })
+
+describe('Parse limit', () => {
+  it('should parse valid number', () => {
+    const query = 'limit=2'
+
+    expect(parseQuery(query)).toEqual<IParsedQueryParams>({
+      limit: 2,
+    })
+  })
+
+  it('should parse invalid number', () => {
+    const query = 'limit=foobar'
+
+    expect(parseQuery(query)).toEqual<IParsedQueryParams>({
+      limit: undefined,
+    })
+  })
+})
+
+describe('Parse skip', () => {
+  it('should parse valid number', () => {
+    const query = 'skip=2'
+
+    expect(parseQuery(query)).toEqual<IParsedQueryParams>({
+      skip: 2,
+    })
+  })
+
+  it('should parse invalid number', () => {
+    const query = 'skip=foobar'
+
+    expect(parseQuery(query)).toEqual<IParsedQueryParams>({
+      skip: undefined,
+    })
+  })
+})

@@ -2,6 +2,7 @@
 import { PrismaClient, PrismaAction, PrismaClientOptions } from '@prisma/client'
 import { IAdapter, IParsedQueryParams } from '../../types'
 import { IPrismaParsedQueryParams } from './types'
+import { parsePrismaCursor } from './utils/parseCursor'
 import { parsePrismaOrderBy } from './utils/parseOrderBy'
 import { parsePrismaRecursiveField } from './utils/parseRecursive'
 import { parsePrismaWhere } from './utils/parseWhere'
@@ -50,6 +51,15 @@ export default class PrismaAdapter<T>
     if (query.orderBy) {
       parsed.orderBy = parsePrismaOrderBy(query.orderBy)
     }
+    if (query.limit) {
+      parsed.take = query.limit
+    }
+    if (query.skip) {
+      parsed.skip = query.skip
+    }
+    if (query.cursor) {
+      parsed.cursor = parsePrismaCursor(JSON.parse(query.cursor))
+    }
 
     return parsed
   }
@@ -60,6 +70,9 @@ export default class PrismaAdapter<T>
       include: query.include,
       where: query.where,
       orderBy: query.orderBy,
+      cursor: query.cursor,
+      take: query.take,
+      skip: query.skip,
     })
 
     return results

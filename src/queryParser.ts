@@ -71,8 +71,19 @@ export const parseQuery = (queryString?: string): IParsedQueryParams => {
     if (query.orderBy) {
       parsedQuery.orderBy = parseOrderBy(query.orderBy as string)
     }
+    if (query.limit) {
+      parsedQuery.limit = Number.isFinite(+query.limit)
+        ? +query.limit
+        : undefined
+    }
+    if (query.skip) {
+      parsedQuery.skip = Number.isFinite(+query.skip) ? +query.skip : undefined
+    }
 
-    return parsedQuery
+    return {
+      ...query,
+      ...parsedQuery,
+    }
   }
 
   return {}

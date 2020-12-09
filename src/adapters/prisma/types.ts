@@ -40,9 +40,16 @@ export type TPrismaOrderBy = {
   [key: string]: TPrismaOrderByOperator
 }
 
+export type TPrismaCursor = {
+  [key: string]: string | number | boolean
+}
+
 export interface IPrismaParsedQueryParams {
   select?: TPrismaRecursive<'select'>
   include?: TPrismaRecursive<'include'>
   where?: TPrismaWhereField
   orderBy?: TPrismaOrderBy
+  take?: number
+  skip?: number
+  cursor?: TPrismaCursor
 }

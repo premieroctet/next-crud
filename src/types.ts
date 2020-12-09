@@ -74,4 +74,7 @@ export interface IParsedQueryParams {
   include?: TRecursiveField
   where?: TWhereField
   orderBy?: TOrderByField
+  limit?: number
+  skip?: number
+  [key: string]: any
 }

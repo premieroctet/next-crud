@@ -109,7 +109,17 @@ export interface IAdapter<T, Q = IParsedQueryParams> {
 
 The `parseQuery` function is used to transform out basic query parsing into a shape that your database would expect. If you don't need that kind of transformation, your function can just return the `query` argument.
 
-### Prisma adapter known issues
+## Prisma adapter
+
+### Additional query params
+
+The Prisma adapter provides an additional query param, which is related to a property used by prisma:
+
+#### cursor
+
+A JSON object containing only 1 key and a matching value corresponding to an entry in the database which is the starting point of the result of the query. You can see that as an offset.
+
+### Knwn issues
 
 Currently the Prisma adapter does not support relations on your `where` search criteria, this will be implemented in a future version.
 
