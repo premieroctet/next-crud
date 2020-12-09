@@ -2,21 +2,32 @@
 import { PrismaClient, PrismaAction, PrismaClientOptions } from '@prisma/client'
 import { IAdapter, IParsedQueryParams } from '../../types'
 import { IPrismaParsedQueryParams } from './types'
-import { parsePrismaRecursiveField } from './utils'
+import { parsePrismaRecursiveField } from './utils/parseRecursive'
+import { parsePrismaWhere } from './utils/parseWhere'
+
+interface IAdapterCtorArgs<T> {
+  modelName: keyof PrismaClient
+  primaryKey?: string
+  options?: PrismaClientOptions
+  manyRelations?: Array<keyof T>
+}
 
 export default class PrismaAdapter<T>
   implements IAdapter<T, IPrismaParsedQueryParams> {
   private prismaDelegate: Record<PrismaAction, (...args: any[]) => Promise<T>>
   private primaryKey: string
+  private manyRelations: Array<keyof T>
 
-  constructor(
-    modelName: keyof PrismaClient,
+  constructor({
+    modelName,
     primaryKey = 'id',
-    options?: PrismaClientOptions
-  ) {
+    options,
+    manyRelations = [],
+  }: IAdapterCtorArgs<T>) {
     const prisma = new PrismaClient(options)
     this.prismaDelegate = prisma[modelName]
     this.primaryKey = primaryKey
+    this.manyRelations = manyRelations
   }
 
   parseQuery(query?: IParsedQueryParams) {
@@ -29,6 +40,12 @@ export default class PrismaAdapter<T>
     if (query.include) {
       parsed.include = parsePrismaRecursiveField(query.include, 'include')
     }
+    if (query.where) {
+      parsed.where = parsePrismaWhere(
+        query.where,
+        this.manyRelations as string[]
+      )
+    }
 
     return parsed
   }
@@ -37,6 +54,7 @@ export default class PrismaAdapter<T>
     const results = await this.prismaDelegate.findMany({
       select: query.select,
       include: query.include,
+      where: query.where,
     })
 
     return results

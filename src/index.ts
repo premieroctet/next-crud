@@ -73,7 +73,7 @@ function NextCrud<T>({
           break
       }
     } catch (e) {
-      res.status(500).send(e)
+      res.status(500).send(e.message)
     } finally {
       res.end()
     }

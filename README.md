@@ -34,7 +34,9 @@ export default handler
 
 You can add some criteria to your queries using the query params. Here is the list of the supported query params:
 
-- `select`: a list of fields which will be retrieved to the model. You can select nested fields by just separating the fields with a `.`. Example:
+#### select
+
+A list of fields which will be retrieved to the model. You can select nested fields by just separating the fields with a `.`. Example:
 
 ```
 select=id,username,articles,articles.id
@@ -54,7 +56,32 @@ will return a response with the following shape
 }
 ```
 
-- `include`: a list of fields which corresponds to the model relations to include.
+#### include
+
+A list of fields which corresponds to the model relations to include. You can aswell include nested fields just like you'd do with `select`
+
+#### where
+
+A JSON representation of the search conditions, heavily inspired on what [nest-crud](https://github.com/nestjsx/crud/wiki/Requests#search) does. It supports the following operators:
+
+- `$eq` (`=`, equal)
+- `$neq` (`!=`, not equal)
+- `$in` (`IN`, in range, must be an array)
+- `$nin` (`NOT IN`, not in range, must be an array)
+- `$lt` (`<`, lower than, must be a numeric value)
+- `$lte` (`<=`, lower than or equal, must be a numeric value)
+- `$gt` (`>`, greater than, must be a numeric value)
+- `$gte` (`>=`, greater than or equal, must be a numeric value)
+- `$cont` (`LIKE %val%`, contains string value)
+- `$starts` (`LIKE val%`, field starts with value)
+- `$ends` (`LIKE %val`, field ends with value)
+- `$isnull`, (`IS NULL`, must be used in a string, e.g: `"myfield": "$isnull"`)
+
+We also provide 3 operators to combine multiple search:
+
+- `$and` (`AND`), should be an object, this is the same thing as just providing an JSON object to the query param
+- `$or` (`OR`), should be an object, this will apply an `OR` condition between each properties of the object
+- `$not` (`NOT`), should be an object, this should match all the data in the database that do not match those criteria.
 
 # Adapters
 
@@ -75,6 +102,10 @@ export interface IAdapter<T, Q = IParsedQueryParams> {
 
 The `parseQuery` function is used to transform out basic query parsing into a shape that your database would expect. If you don't need that kind of transformation, your function can just return the `query` argument.
 
-### Example
+### Prisma adapter known issues
+
+Currently the Prisma adapter does not support relations on your `where` search criteria, this will be implemented in a future version.
+
+# Example
 
 See the example folder

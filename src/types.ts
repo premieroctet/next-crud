@@ -46,9 +46,8 @@ export type TWhereOperator =
   | '$starts'
   | '$ends'
   | '$isnull'
-  | '$notnull'
 
-type TSearchCondition = string | boolean | number
+export type TSearchCondition = string | boolean | number | Date | null
 
 export type TWhereCondition = {
   [key in TWhereOperator]?: TSearchCondition
@@ -59,8 +58,9 @@ export type TCondition = {
 }
 
 export type TWhereField = TCondition & {
-  $and?: TCondition[]
-  $or?: TCondition[] | TWhereCondition
+  $and?: TCondition | TCondition[]
+  $or?: TCondition | TCondition[]
+  $not?: TCondition | TCondition[]
 }
 
 export interface IParsedQueryParams {

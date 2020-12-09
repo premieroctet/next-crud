@@ -1,7 +1,7 @@
 import { TPrismaRecursive } from '../../../src/adapters/prisma/types'
-import { parsePrismaRecursiveField } from '../../../src/adapters/prisma/utils'
+import { parsePrismaRecursiveField } from '../../../src/adapters/prisma/utils/parseRecursive'
 
-describe('prisma utils', () => {
+describe('Prisma parse recursive', () => {
   it('should parse select to prisma select', () => {
     expect(
       parsePrismaRecursiveField(

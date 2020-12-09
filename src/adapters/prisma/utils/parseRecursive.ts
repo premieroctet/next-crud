@@ -1,5 +1,5 @@
-import { TRecursiveField } from '../../types'
-import { TPrismaRecursiveField, TPrismaRecursive } from './types'
+import { TRecursiveField } from '../../../types'
+import { TPrismaRecursive, TPrismaRecursiveField } from '../types'
 
 export const parsePrismaRecursiveField = <T extends TPrismaRecursiveField>(
   select: TRecursiveField,

@@ -4,7 +4,9 @@ import PrismaAdapter from 'next-crud/dist/adapters/prisma'
 
 const handler = NextCrud({
   resourceName: 'users',
-  adapter: new PrismaAdapter<User>('user'),
+  adapter: new PrismaAdapter<User>({
+    modelName: 'user',
+  }),
 })
 
 export default handler
