@@ -87,3 +87,9 @@ export const getRouteType = ({
 export const formatResourceId = (resourceId: string): string | number => {
   return Number.isSafeInteger(+resourceId) ? +resourceId : resourceId
 }
+
+const primitiveTypes = ['string', 'boolean', 'number']
+
+export const isPrimitive = (value: any): boolean => {
+  return primitiveTypes.includes(typeof value)
+}

@@ -1,17 +1,16 @@
 import { IHandlerParams } from '../types'
 
-interface ICreateHandler<T> extends IHandlerParams<T> {
+interface ICreateHandler<T, Q> extends IHandlerParams<T, Q> {
   body: Record<string, any>
 }
 
-async function createHandler<T>({
-  prismaDelegate,
+async function createHandler<T, Q>({
+  adapter,
   response,
   body,
-}: ICreateHandler<T>): Promise<void> {
-  const createdResource = await prismaDelegate.create({
-    data: body,
-  })
+  query,
+}: ICreateHandler<T, Q>): Promise<void> {
+  const createdResource = await adapter.create(body, query)
 
   response.status(201).send(createdResource)
 }
