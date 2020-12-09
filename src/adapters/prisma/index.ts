@@ -33,7 +33,6 @@ export default class PrismaAdapter<T>
   }
 
   parseQuery(query?: IParsedQueryParams) {
-    // @ts-ignore
     const parsed: IPrismaParsedQueryParams = {}
 
     if (query.select) {

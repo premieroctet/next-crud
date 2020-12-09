@@ -8,17 +8,18 @@ export enum RouteType {
   DELETE = 'DELETE',
 }
 
-export interface IHandlerParams<T> {
-  adapter: IAdapter<T>
+export interface IHandlerParams<T, Q> {
+  adapter: IAdapter<T, Q>
   response: NextApiResponse
-  query: IParsedQueryParams
+  query: Q
 }
 
-export interface IUniqueResourceHandlerParams<T> extends IHandlerParams<T> {
+export interface IUniqueResourceHandlerParams<T, Q>
+  extends IHandlerParams<T, Q> {
   resourceId: string | number
 }
 
-export interface IAdapter<T, Q = IParsedQueryParams> {
+export interface IAdapter<T, Q> {
   parseQuery(query?: IParsedQueryParams): Q
   getAll(query?: Q): Promise<T>
   getOne(resourceId: string | number, query?: Q): Promise<T>

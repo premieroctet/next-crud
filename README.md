@@ -15,8 +15,7 @@ or
 - Import the handler and the adapter you want to use, in that case we will use the prisma adapter but you can use your own one (see [this section](#adapters))
 
 ```javascript
-import NextCrud from 'next-crud'
-import PrismaAdapter from 'next-crud/dist/adapters/prisma'
+import NextCrud, { PrismaAdapter } from 'next-crud'
 ```
 
 - Then create the handler and export it
@@ -24,7 +23,9 @@ import PrismaAdapter from 'next-crud/dist/adapters/prisma'
 ```javascript
 const handler = NextCrud({
   resourceName: modelName, // the model which corresponds to the folder name
-  adapter: new PrismaAdapter('user'),
+  adapter: new PrismaAdapter({
+    modelName: 'user',
+  }),
 })
 
 export default handler
@@ -58,7 +59,7 @@ will return a response with the following shape
 
 #### include
 
-A list of fields which corresponds to the model relations to include. You can aswell include nested fields just like you'd do with `select`
+A list of fields which corresponds to the model relations to include. You can aswell include nested fields just like you would do with `select`
 
 #### where
 
