@@ -76,5 +76,6 @@ export interface IParsedQueryParams {
   orderBy?: TOrderByField
   limit?: number
   skip?: number
+  distinct?: string
   [key: string]: any
 }

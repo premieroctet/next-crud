@@ -90,6 +90,18 @@ A JSON representation of the field to order by and its direction. This should be
 - `$asc` for ascending order
 - `$desc` for descending order
 
+#### limit
+
+A number representing the number of element to return
+
+#### skip
+
+The number of element to skip the first n elements from the query
+
+#### distinct
+
+A field name on which the duplicates are removed from the dataset
+
 # Adapters
 
 An adapter is a class implementing various methods allowing you to query the data to the database your app uses.

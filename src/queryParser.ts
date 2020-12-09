@@ -79,6 +79,9 @@ export const parseQuery = (queryString?: string): IParsedQueryParams => {
     if (query.skip) {
       parsedQuery.skip = Number.isFinite(+query.skip) ? +query.skip : undefined
     }
+    if (query.distinct) {
+      parsedQuery.distinct = query.distinct as string
+    }
 
     return {
       ...query,

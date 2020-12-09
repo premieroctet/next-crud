@@ -60,6 +60,9 @@ export default class PrismaAdapter<T>
     if (query.cursor) {
       parsed.cursor = parsePrismaCursor(JSON.parse(query.cursor))
     }
+    if (query.distinct) {
+      parsed.distinct = query.distinct
+    }
 
     return parsed
   }
@@ -73,6 +76,7 @@ export default class PrismaAdapter<T>
       cursor: query.cursor,
       take: query.take,
       skip: query.skip,
+      distinct: query.distinct,
     })
 
     return results

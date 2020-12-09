@@ -170,3 +170,13 @@ describe('Parse skip', () => {
     })
   })
 })
+
+describe('Parse distinct', () => {
+  it('should parse distinct', () => {
+    const query = 'distinct=id'
+
+    expect(parseQuery(query)).toEqual<IParsedQueryParams>({
+      distinct: 'id',
+    })
+  })
+})

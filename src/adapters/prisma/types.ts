@@ -52,4 +52,5 @@ export interface IPrismaParsedQueryParams {
   take?: number
   skip?: number
   cursor?: TPrismaCursor
+  distinct?: string
 }
