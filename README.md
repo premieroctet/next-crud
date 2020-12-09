@@ -132,7 +132,7 @@ The Prisma adapter provides an additional query param, which is related to a pro
 
 A JSON object containing only 1 key and a matching value corresponding to an entry in the database which is the starting point of the result of the query. You can see that as an offset.
 
-### Knwn issues
+### Known issues
 
 Currently the Prisma adapter does not support relations on your `where` search criteria, this will be implemented in a future version.
 
