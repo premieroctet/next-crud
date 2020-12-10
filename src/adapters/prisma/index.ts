@@ -19,6 +19,7 @@ export default class PrismaAdapter<T>
   private prismaDelegate: Record<PrismaAction, (...args: any[]) => Promise<T>>
   private primaryKey: string
   private manyRelations: Array<keyof T>
+  private prismaClient: PrismaClient
 
   constructor({
     modelName,
@@ -142,5 +143,13 @@ export default class PrismaAdapter<T>
     })
 
     return deletedResource
+  }
+
+  connect() {
+    return this.prismaClient.$connect()
+  }
+
+  disconnect() {
+    return this.prismaClient.$disconnect()
   }
 }

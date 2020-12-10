@@ -28,6 +28,8 @@ export interface IAdapter<T, Q> {
   create(data: any, query?: Q): Promise<T>
   update(resourceId: string | number, data: any, query?: Q): Promise<T>
   delete(resourceId: string | number, query?: Q): Promise<T>
+  connect?: () => Promise<void>
+  disconnect?: () => Promise<void>
 }
 
 export type TMiddlewareContext<T> = {
