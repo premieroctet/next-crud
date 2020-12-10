@@ -29,6 +29,8 @@ interface INextCrudOptions<T, Q> {
   onSuccess?: TCallback
   onError?: TErrorCallback
   middlewares?: TMiddleware<T>[]
+  only?: RouteType[]
+  exclude?: RouteType[]
 }
 
 function NextCrud<T, Q = any>({
@@ -39,9 +41,31 @@ function NextCrud<T, Q = any>({
   onSuccess,
   onError,
   middlewares = [],
+  only = [],
+  exclude = [],
 }: INextCrudOptions<T, Q>): NextApiHandler<T> {
   const handler: NextApiHandler = async (req, res) => {
     const { url, method, body } = req
+
+    let accessibleRoutes: RouteType[] = [
+      RouteType.READ_ALL,
+      RouteType.READ_ONE,
+      RouteType.UPDATE,
+      RouteType.DELETE,
+      RouteType.CREATE,
+    ]
+
+    if (only.length) {
+      accessibleRoutes = accessibleRoutes.filter((elem) => {
+        return only.includes(elem)
+      })
+    }
+
+    if (exclude.length) {
+      accessibleRoutes = accessibleRoutes.filter((elem) => {
+        return !exclude.includes(elem)
+      })
+    }
 
     try {
       const { routeType, resourceId } = getRouteType({
@@ -51,6 +75,11 @@ function NextCrud<T, Q = any>({
       })
 
       await onRequest?.(req, res)
+
+      if (!accessibleRoutes.includes(routeType)) {
+        res.status(404).end()
+        return
+      }
 
       const parsedQuery = parseQuery(url.split('?')[1])
 
