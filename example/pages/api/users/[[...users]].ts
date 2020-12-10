@@ -6,6 +6,29 @@ const handler = NextCrud({
   adapter: new PrismaAdapter<User>({
     modelName: 'user',
   }),
+  onRequest: (req) => {
+    console.log(`request occured on URL ${req.url}`)
+  },
+  onSuccess: (req, res) => {
+    console.log('request successful')
+  },
+  onError: (req, res, error) => {
+    console.log('error during request', error)
+  },
+  middlewares: [
+    (ctx, next) => {
+      console.log('first middleware', ctx.result)
+      ctx.result = {
+        // @ts-ignore
+        myCustomKey: ctx.result,
+      }
+      next()
+    },
+    (ctx, next) => {
+      console.log('second middleware', ctx.result)
+      next()
+    },
+  ],
 })
 
 export default handler

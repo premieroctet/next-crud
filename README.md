@@ -103,6 +103,29 @@ The number of element to skip the first n elements from the query
 
 A field name on which the duplicates are removed from the dataset
 
+# Callbacks
+
+You can pass callbacks for request, success and error:
+
+- `onSuccess` and `onRequest` will receive 2 argument: the request object and the response
+- `onError` will receive an extra argument which is the thrown error
+
+# Middlewares
+
+With the `middlewares` property, you can pass an array of functions. The functions receives the following arguments:
+
+- context as the first argument. It's an object will the following shape:
+
+```typescript
+export type TMiddlewareContext<T> = {
+  req: NextApiRequest
+  res: NextApiResponse
+  result: T | T[]
+}
+```
+
+- a function as the second argument, which is used to execute the next middleware in the stack. **Every middleware needs to call that function.**
+
 # Adapters
 
 An adapter is a class implementing various methods allowing you to query the data to the database your app uses.
