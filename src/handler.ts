@@ -8,23 +8,27 @@ import {
   updateHandler,
 } from './handlers'
 import { parseQuery } from './queryParser'
-import { IAdapter, IHandlerParams, RouteType } from './types'
+import { IAdapter, IHandlerParams, RouteType, TMiddleware } from './types'
 import { getRouteType, formatResourceId as formatResourceIdUtil } from './utils'
 
-type TMiddleware = (req: NextApiRequest, res: NextApiResponse) => void
-type TErrorMiddleware = (
+type TCallback = (
+  req: NextApiRequest,
+  res: NextApiResponse
+) => void | Promise<void>
+type TErrorCallback = (
   req: NextApiRequest,
   res: NextApiResponse,
   error: any
-) => void
+) => void | Promise<void>
 
 interface INextCrudOptions<T, Q> {
   adapter: IAdapter<T, Q>
   resourceName: string
   formatResourceId?: (resourceId: string) => string | number
-  onRequest?: TMiddleware
-  onSuccess?: TMiddleware
-  onError?: TErrorMiddleware
+  onRequest?: TCallback
+  onSuccess?: TCallback
+  onError?: TErrorCallback
+  middlewares?: TMiddleware<T>[]
 }
 
 function NextCrud<T, Q = any>({
@@ -34,6 +38,7 @@ function NextCrud<T, Q = any>({
   onRequest,
   onSuccess,
   onError,
+  middlewares = [],
 }: INextCrudOptions<T, Q>): NextApiHandler<T> {
   const handler: NextApiHandler = async (req, res) => {
     const { url, method, body } = req
@@ -45,14 +50,16 @@ function NextCrud<T, Q = any>({
         resourceName,
       })
 
-      onRequest?.(req, res)
+      await onRequest?.(req, res)
 
       const parsedQuery = parseQuery(url.split('?')[1])
 
       const params: IHandlerParams<T, Q> = {
+        request: req,
         response: res,
         adapter,
         query: adapter.parseQuery(parsedQuery),
+        middlewares,
       }
 
       const resourceIdFormatted = formatResourceId(resourceId)
@@ -88,9 +95,9 @@ function NextCrud<T, Q = any>({
           break
       }
 
-      onSuccess?.(req, res)
+      await onSuccess?.(req, res)
     } catch (e) {
-      onError?.(req, res, e)
+      await onError?.(req, res, e)
       res.status(500).send(e.message)
     } finally {
       res.end()

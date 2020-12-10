@@ -1,4 +1,4 @@
-import { NextApiResponse } from 'next'
+import { NextApiRequest, NextApiResponse } from 'next'
 
 export enum RouteType {
   CREATE = 'CREATE',
@@ -10,8 +10,10 @@ export enum RouteType {
 
 export interface IHandlerParams<T, Q> {
   adapter: IAdapter<T, Q>
+  request: NextApiRequest
   response: NextApiResponse
   query: Q
+  middlewares: TMiddleware<T>[]
 }
 
 export interface IUniqueResourceHandlerParams<T, Q>
@@ -27,6 +29,17 @@ export interface IAdapter<T, Q> {
   update(resourceId: string | number, data: any, query?: Q): Promise<T>
   delete(resourceId: string | number, query?: Q): Promise<T>
 }
+
+export type TMiddlewareContext<T> = {
+  req: NextApiRequest
+  res: NextApiResponse
+  result: T | T[]
+}
+
+export type TMiddleware<T> = (
+  ctx: TMiddlewareContext<T>,
+  next: () => void
+) => void
 
 // Query parsing types
 

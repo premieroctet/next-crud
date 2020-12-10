@@ -1,4 +1,4 @@
-import { RouteType } from './types'
+import { RouteType, TMiddleware, TMiddlewareContext } from './types'
 
 interface GetRouteTypeParams {
   method: string
@@ -92,4 +92,29 @@ const primitiveTypes = ['string', 'boolean', 'number']
 
 export const isPrimitive = (value: any): boolean => {
   return primitiveTypes.includes(typeof value)
+}
+
+export const executeMiddlewares = async <T extends any>(
+  middlewares: TMiddleware<T>[],
+  ctx: TMiddlewareContext<T>
+) => {
+  const validMiddlewares = middlewares.filter((fn) => typeof fn === 'function')
+  let prevIndex = -1
+
+  const runner = async (index: number) => {
+    if (index === prevIndex) {
+      throw new Error('too many next() invocations')
+    }
+
+    prevIndex = index
+    const fn = validMiddlewares[index]
+
+    if (fn) {
+      fn(ctx, () => {
+        return runner(index + 1)
+      })
+    }
+  }
+
+  await runner(0)
 }
