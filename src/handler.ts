@@ -1,5 +1,5 @@
 // @ts-ignore
-import { NextApiHandler } from 'next'
+import { NextApiHandler, NextApiRequest, NextApiResponse } from 'next'
 import {
   createHandler,
   deleteHandler,
@@ -11,16 +11,29 @@ import { parseQuery } from './queryParser'
 import { IAdapter, IHandlerParams, RouteType } from './types'
 import { getRouteType, formatResourceId as formatResourceIdUtil } from './utils'
 
+type TMiddleware = (req: NextApiRequest, res: NextApiResponse) => void
+type TErrorMiddleware = (
+  req: NextApiRequest,
+  res: NextApiResponse,
+  error: any
+) => void
+
 interface INextCrudOptions<T, Q> {
   adapter: IAdapter<T, Q>
   resourceName: string
   formatResourceId?: (resourceId: string) => string | number
+  onRequest?: TMiddleware
+  onSuccess?: TMiddleware
+  onError?: TErrorMiddleware
 }
 
 function NextCrud<T, Q = any>({
   adapter,
   resourceName,
   formatResourceId = formatResourceIdUtil,
+  onRequest,
+  onSuccess,
+  onError,
 }: INextCrudOptions<T, Q>): NextApiHandler<T> {
   const handler: NextApiHandler = async (req, res) => {
     const { url, method, body } = req
@@ -31,6 +44,8 @@ function NextCrud<T, Q = any>({
         method,
         resourceName,
       })
+
+      onRequest?.(req, res)
 
       const parsedQuery = parseQuery(url.split('?')[1])
 
@@ -72,7 +87,10 @@ function NextCrud<T, Q = any>({
           res.status(404)
           break
       }
+
+      onSuccess?.(req, res)
     } catch (e) {
+      onError?.(req, res, e)
       res.status(500).send(e.message)
     } finally {
       res.end()

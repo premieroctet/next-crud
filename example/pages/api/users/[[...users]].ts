@@ -6,6 +6,15 @@ const handler = NextCrud({
   adapter: new PrismaAdapter<User>({
     modelName: 'user',
   }),
+  onRequest: (req) => {
+    console.log(`request occured on URL ${req.url}`)
+  },
+  onSuccess: () => {
+    console.log('request successful')
+  },
+  onError: (req, res, error) => {
+    console.log('error during request', error)
+  },
 })
 
 export default handler
