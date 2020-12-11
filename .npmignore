@@ -8,3 +8,4 @@ jest.config.json
 example
 .github
 __tests__
+node_modules

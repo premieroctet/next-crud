@@ -1,3 +1,9 @@
+# Next Crud
+
+[![NPM Version](https://img.shields.io/npm/v/@premieroctet/next-crud/latest)]()
+[![NPM License](https://img.shields.io/npm/l/all-contributors.svg?style=flat)](https://github.com/tterb/hyde/blob/master/LICENSE)
+[![Github Actions](https://github.com/premieroctet/next-crud/workflows/next-crud/badge.svg)]()
+
 `next-crud` is a helper library that creates CRUD API routes with one simple function based on a Prisma model for Next.js.
 
 # Installation
@@ -30,6 +36,8 @@ const handler = NextCrud({
 
 export default handler
 ```
+
+You can then try a simple request using a tool like Postman, Insomnia or just your web browser. Start your Next.js app, then go to `http://localhost:3000/api/<yourModelName>`, which should return a json containing a list of data from your resource.
 
 # Query params
 
