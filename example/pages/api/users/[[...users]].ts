@@ -29,6 +29,15 @@ const handler = NextCrud({
       next()
     },
   ],
+  customHandlers: [
+    {
+      path: '/(.*)/users/custom',
+      handler: async ({ res }) => {
+        // @ts-ignore
+        res.status(200).send('Hello world')
+      },
+    },
+  ],
 })
 
 export default handler

@@ -1,5 +1,6 @@
 // @ts-ignore
 import { NextApiHandler, NextApiRequest, NextApiResponse } from 'next'
+import { match } from 'path-to-regexp'
 import {
   createHandler,
   deleteHandler,
@@ -21,6 +22,18 @@ type TErrorCallback = (
   error: any
 ) => void | Promise<void>
 
+interface ICustomHandlerParams<T, Q> {
+  req: NextApiRequest
+  res: NextApiResponse<T>
+  adapter: IAdapter<T, Q>
+}
+
+interface ICustomHandler<T, Q> {
+  path: string | RegExp | Array<string | RegExp>
+  handler: (params: ICustomHandlerParams<T, Q>) => void | Promise<void>
+  method?: string
+}
+
 interface INextCrudOptions<T, Q> {
   adapter: IAdapter<T, Q>
   resourceName: string
@@ -31,6 +44,7 @@ interface INextCrudOptions<T, Q> {
   middlewares?: TMiddleware<T>[]
   only?: RouteType[]
   exclude?: RouteType[]
+  customHandlers?: ICustomHandler<T, Q>[]
 }
 
 function NextCrud<T, Q = any>({
@@ -43,6 +57,7 @@ function NextCrud<T, Q = any>({
   middlewares = [],
   only = [],
   exclude = [],
+  customHandlers = [],
 }: INextCrudOptions<T, Q>): NextApiHandler<T> {
   if (
     !adapter.create ||
@@ -104,37 +119,64 @@ function NextCrud<T, Q = any>({
 
       const resourceIdFormatted = formatResourceId(resourceId)
 
+      const executeCrud = async () => {
+        switch (routeType) {
+          case RouteType.READ_ONE:
+            await getOneHandler({
+              ...params,
+              resourceId: resourceIdFormatted,
+            })
+            break
+          case RouteType.READ_ALL:
+            await getAllHandler<T, Q>(params)
+            break
+          case RouteType.CREATE:
+            await createHandler<T, Q>({ ...params, body })
+            break
+          case RouteType.UPDATE:
+            await updateHandler<T, Q>({
+              ...params,
+              resourceId: resourceIdFormatted,
+              body,
+            })
+            break
+          case RouteType.DELETE:
+            await deleteHandler<T, Q>({
+              ...params,
+              resourceId: resourceIdFormatted,
+            })
+            break
+          case null:
+            res.status(404)
+            break
+        }
+      }
+
       await adapter.connect?.()
 
-      switch (routeType) {
-        case RouteType.READ_ONE:
-          await getOneHandler({
-            ...params,
-            resourceId: resourceIdFormatted,
+      if (customHandlers.length) {
+        const realPath = url.split('?')[0]
+        const customHandler = customHandlers.find(
+          ({ path, method: customHandlerMethod = 'GET' }) => {
+            const matcher = match(path, {
+              decode: decodeURIComponent,
+            })
+
+            return !!matcher(realPath) && customHandlerMethod === method
+          }
+        )
+
+        if (customHandler) {
+          await customHandler.handler({
+            req,
+            res,
+            adapter,
           })
-          break
-        case RouteType.READ_ALL:
-          await getAllHandler<T, Q>(params)
-          break
-        case RouteType.CREATE:
-          await createHandler<T, Q>({ ...params, body })
-          break
-        case RouteType.UPDATE:
-          await updateHandler<T, Q>({
-            ...params,
-            resourceId: resourceIdFormatted,
-            body,
-          })
-          break
-        case RouteType.DELETE:
-          await deleteHandler<T, Q>({
-            ...params,
-            resourceId: resourceIdFormatted,
-          })
-          break
-        case null:
-          res.status(404)
-          break
+        } else {
+          await executeCrud()
+        }
+      } else {
+        await executeCrud()
       }
 
       await onSuccess?.(req, res)

@@ -27,8 +27,8 @@ export default class PrismaAdapter<T>
     options,
     manyRelations = [],
   }: IAdapterCtorArgs<T>) {
-    const prisma = new PrismaClient(options)
-    this.prismaDelegate = prisma[modelName]
+    this.prismaClient = new PrismaClient(options)
+    this.prismaDelegate = this.prismaClient[modelName]
     this.primaryKey = primaryKey
     this.manyRelations = manyRelations
   }
@@ -151,5 +151,9 @@ export default class PrismaAdapter<T>
 
   disconnect() {
     return this.prismaClient.$disconnect()
+  }
+
+  get client() {
+    return this.prismaClient
   }
 }
