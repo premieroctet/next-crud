@@ -8,11 +8,11 @@
 
 # Installation
 
-`yarn add next-crud`
+`yarn add @premieroctet/next-crud`
 
 or
 
-`npm i -S next-crud`
+`npm i -S @premieroctet/next-crud`
 
 # Usage
 
@@ -21,7 +21,7 @@ or
 - Import the handler and the adapter you want to use, in that case we will use the prisma adapter but you can use your own one (see [this section](#adapters))
 
 ```javascript
-import NextCrud, { PrismaAdapter } from 'next-crud'
+import NextCrud, { PrismaAdapter } from '@premieroctet/next-crud'
 ```
 
 - Then create the handler and export it
@@ -147,7 +147,7 @@ You can pass the `only` and `exclude` optional properties to filter the accessib
 _TypeScript users: you can import the following enum and use it in the array_
 
 ```javascript
-import { RouteType } from 'next-crud'
+import { RouteType } from '@premieroctet/next-crud'
 ```
 
 # Custom handlers
