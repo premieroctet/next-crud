@@ -44,6 +44,17 @@ function NextCrud<T, Q = any>({
   only = [],
   exclude = [],
 }: INextCrudOptions<T, Q>): NextApiHandler<T> {
+  if (
+    !adapter.create ||
+    !adapter.delete ||
+    !adapter.getAll ||
+    !adapter.getOne ||
+    !adapter.parseQuery ||
+    !adapter.update
+  ) {
+    throw new Error('missing method in adapter')
+  }
+
   const handler: NextApiHandler = async (req, res) => {
     const { url, method, body } = req
 
@@ -93,6 +104,8 @@ function NextCrud<T, Q = any>({
 
       const resourceIdFormatted = formatResourceId(resourceId)
 
+      await adapter.connect?.()
+
       switch (routeType) {
         case RouteType.READ_ONE:
           await getOneHandler({
@@ -129,6 +142,7 @@ function NextCrud<T, Q = any>({
       await onError?.(req, res, e)
       res.status(500).send(e.message)
     } finally {
+      await adapter.disconnect?.()
       res.end()
     }
   }
