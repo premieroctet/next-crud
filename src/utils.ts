@@ -1,3 +1,4 @@
+import { match } from 'path-to-regexp'
 import { RouteType, TMiddleware, TMiddlewareContext } from './types'
 
 interface GetRouteTypeParams {
@@ -7,9 +8,11 @@ interface GetRouteTypeParams {
 }
 
 export interface GetRouteType {
-  routeType: RouteType
+  routeType: RouteType | null
   resourceId?: string
 }
+
+type TPathMatch = { id: string }
 
 export const getRouteType = ({
   method,
@@ -25,16 +28,23 @@ export const getRouteType = ({
     )
   }
 
-  const [resourceId] = realPath.split('/').reverse()
+  const entityMatcher = match<TPathMatch>(
+    [`/(.*)/${resourceName}`, `/(.*)/${resourceName}/:id`],
+    { decode: decodeURIComponent }
+  )
+  const simpleMatcher = match(`/(.*)/${resourceName}`, {
+    decode: decodeURIComponent,
+  })
 
   switch (method) {
     case 'GET': {
-      const pathMatch = realPath.match(new RegExp(`/${resourceName}(/.*)?`))
+      const pathMatch = entityMatcher(realPath)
+
       // If we got a /something after the resource name, we are reading 1 entity
-      if (pathMatch && pathMatch[1]) {
+      if (pathMatch && pathMatch.params.id) {
         return {
           routeType: RouteType.READ_ONE,
-          resourceId,
+          resourceId: pathMatch.params.id,
         }
       }
 
@@ -43,7 +53,7 @@ export const getRouteType = ({
       }
     }
     case 'POST': {
-      const pathMatch = new RegExp(`/${resourceName}$`).test(realPath)
+      const pathMatch = simpleMatcher(realPath)
 
       if (pathMatch) {
         return {
@@ -51,35 +61,43 @@ export const getRouteType = ({
         }
       }
 
-      return null
+      return {
+        routeType: null,
+      }
     }
     case 'PUT':
     case 'PATCH': {
-      const pathMatch = new RegExp(`/${resourceName}/.*$`).test(realPath)
+      const pathMatch = entityMatcher(realPath)
 
-      if (pathMatch) {
+      if (pathMatch && pathMatch.params.id) {
         return {
           routeType: RouteType.UPDATE,
-          resourceId,
+          resourceId: pathMatch.params.id,
         }
       }
 
-      return null
+      return {
+        routeType: null,
+      }
     }
     case 'DELETE': {
-      const pathMatch = new RegExp(`/${resourceName}/.*$`).test(realPath)
+      const pathMatch = entityMatcher(realPath)
 
-      if (pathMatch) {
+      if (pathMatch && pathMatch.params.id) {
         return {
           routeType: RouteType.DELETE,
-          resourceId,
+          resourceId: pathMatch.params.id,
         }
       }
 
-      return null
+      return {
+        routeType: null,
+      }
     }
     default: {
-      return null
+      return {
+        routeType: null,
+      }
     }
   }
 }

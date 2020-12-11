@@ -46,6 +46,7 @@
   "dependencies": {
     "lodash.isobject": "^3.0.2",
     "lodash.set": "^4.3.2",
+    "path-to-regexp": "^6.2.0",
     "qs": "^6.9.4"
   }
 }
