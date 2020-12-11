@@ -32,6 +32,7 @@ const handler = NextCrud({
   customHandlers: [
     {
       path: '/(.*)/users/custom',
+      methods: ['GET', 'POST'],
       handler: async ({ res }) => {
         // @ts-ignore
         res.status(200).send('Hello world')

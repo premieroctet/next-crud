@@ -31,7 +31,7 @@ interface ICustomHandlerParams<T, Q> {
 interface ICustomHandler<T, Q> {
   path: string | RegExp | Array<string | RegExp>
   handler: (params: ICustomHandlerParams<T, Q>) => void | Promise<void>
-  method?: string
+  methods?: string[]
 }
 
 interface INextCrudOptions<T, Q> {
@@ -102,7 +102,7 @@ function NextCrud<T, Q = any>({
 
       await onRequest?.(req, res)
 
-      if (!accessibleRoutes.includes(routeType)) {
+      if (!accessibleRoutes.includes(routeType) && !customHandlers.length) {
         res.status(404).end()
         return
       }
@@ -157,12 +157,12 @@ function NextCrud<T, Q = any>({
       if (customHandlers.length) {
         const realPath = url.split('?')[0]
         const customHandler = customHandlers.find(
-          ({ path, method: customHandlerMethod = 'GET' }) => {
+          ({ path, methods: customHandlerMethods = ['GET'] }) => {
             const matcher = match(path, {
               decode: decodeURIComponent,
             })
 
-            return !!matcher(realPath) && customHandlerMethod === method
+            return !!matcher(realPath) && customHandlerMethods.includes(method)
           }
         )
 

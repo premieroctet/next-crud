@@ -126,6 +126,44 @@ export type TMiddlewareContext<T> = {
 
 - a function as the second argument, which is used to execute the next middleware in the stack. **Every middleware needs to call that function.**
 
+# Routes filters
+
+You can pass the `only` and `exclude` optional properties to filter the accessible routes. They accept array of strings. `only` is used to allows accessing only to the listed types of routes. `exclude` denies the access to the listed types of routes. The accepted types of routes are the following:
+
+- `CREATE`
+- `READ_ONE`
+- `READ_ALL`
+- `UPDATE`
+- `DELETE`
+
+_TypeScript users: you can import the following enum and use it in the array_
+
+```javascript
+import { RouteType } from 'next-crud'
+```
+
+# Custom handlers
+
+Sometimes you might want to add your own routes. This is possible thanks to the `customHandlers` property. It accepts an array of objects of the following shape:
+
+```typescript
+interface ICustomHandler<T, Q> {
+  path: string | RegExp | Array<string | RegExp> // path to match (e.g: /(.*)/users/:id)
+  handler: (params: ICustomHandlerParams<T, Q>) => void | Promise<void>
+  methods?: string[] // request methods, defaults to ['GET']
+}
+```
+
+The `handler` property is a function that accepts 1 argument which is an object with the following shape:
+
+```typescript
+interface ICustomHandlerParams<T, Q> {
+  req: NextApiRequest
+  res: NextApiResponse<T>
+  adapter: IAdapter<T, Q>
+}
+```
+
 # Adapters
 
 An adapter is a class implementing various methods allowing you to query the data to the database your app uses.
