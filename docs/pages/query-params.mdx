@@ -1,0 +1,71 @@
+# Query params
+
+You can add some criteria to your queries using the query params. Here is the list of the supported query params:
+
+#### select
+
+A list of fields which will be retrieved to the model. You can select nested fields by just separating the fields with a `.`. Example:
+
+```
+select=id,username,articles,articles.id
+```
+
+will return a response with the following shape
+
+```
+{
+  id: 'something',
+  username: 'something',
+  articles: [
+    {
+      id: 'something'
+    }
+  ]
+}
+```
+
+#### include
+
+A list of fields which corresponds to the model relations to include. You can aswell include nested fields just like you would do with `select`
+
+#### where
+
+A JSON representation of the search conditions, heavily inspired on what [nest-crud](https://github.com/nestjsx/crud/wiki/Requests#search) does. It supports the following operators:
+
+- `$eq` (`=`, equal)
+- `$neq` (`!=`, not equal)
+- `$in` (`IN`, in range, must be an array)
+- `$nin` (`NOT IN`, not in range, must be an array)
+- `$lt` (`<`, lower than, must be a numeric value)
+- `$lte` (`<=`, lower than or equal, must be a numeric value)
+- `$gt` (`>`, greater than, must be a numeric value)
+- `$gte` (`>=`, greater than or equal, must be a numeric value)
+- `$cont` (`LIKE %val%`, contains string value)
+- `$starts` (`LIKE val%`, field starts with value)
+- `$ends` (`LIKE %val`, field ends with value)
+- `$isnull`, (`IS NULL`, must be used in a string, e.g: `"myfield": "$isnull"`)
+
+We also provide 3 operators to combine multiple search:
+
+- `$and` (`AND`), should be an object, this is the same thing as just providing an JSON object to the query param
+- `$or` (`OR`), should be an object, this will apply an `OR` condition between each properties of the object
+- `$not` (`NOT`), should be an object, this should match all the data in the database that do not match those criteria.
+
+#### orderBy
+
+A JSON representation of the field to order by and its direction. This should be an object containing only 1 key (name of the field to order by) with a valid order operator. These are the 2 available operators:
+
+- `$asc` for ascending order
+- `$desc` for descending order
+
+#### limit
+
+A number representing the number of element to return
+
+#### skip
+
+The number of element to skip the first n elements from the query
+
+#### distinct
+
+A field name on which the duplicates are removed from the dataset
