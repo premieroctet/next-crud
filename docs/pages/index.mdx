@@ -39,7 +39,7 @@ import NextCrud, { PrismaAdapter } from '@premieroctet/next-crud'
 
 ```javascript
 const handler = NextCrud({
-  resourceName: modelName, // the model which corresponds to the folder name
+  resourceName: 'users',
   adapter: new PrismaAdapter({
     modelName: 'user',
   }),
