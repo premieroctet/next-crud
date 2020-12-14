@@ -1,5 +1,5 @@
 import { User } from '@prisma/client'
-import NextCrud, { PrismaAdapter } from 'next-crud'
+import NextCrud, { PrismaAdapter } from '@premieroctet/next-crud'
 
 const handler = NextCrud({
   resourceName: 'users',
