@@ -1,13 +1,65 @@
+import Link from 'next/link'
+
 # Next Crud
 
 <span style={{ display: 'inline-block' }}>
-[![NPM Version](https://img.shields.io/npm/v/@premieroctet/next-crud/latest)]()
+  [![NPM
+  Version](https://img.shields.io/npm/v/@premieroctet/next-crud/latest)]()
 </span>
 <span style={{ display: 'inline-block', marginLeft: 5 }}>
-[![NPM License](https://img.shields.io/npm/l/all-contributors.svg?style=flat)](https://github.com/tterb/hyde/blob/master/LICENSE)
+  [![NPM
+  License](https://img.shields.io/npm/l/all-contributors.svg?style=flat)](https://github.com/tterb/hyde/blob/master/LICENSE)
 </span>
 <span style={{ display: 'inline-block', marginLeft: 5 }}>
-[![Github Actions](https://github.com/premieroctet/next-crud/workflows/next-crud/badge.svg)]()
+  [![Github
+  Actions](https://github.com/premieroctet/next-crud/workflows/next-crud/badge.svg)]()
 </span>
 
 `next-crud` is a helper library that creates CRUD API routes with one simple function based on a Prisma model for Next.js.
+
+## Installation
+
+`yarn add @premieroctet/next-crud`
+
+or
+
+`npm i -S @premieroctet/next-crud`
+
+## Usage
+
+Here is an example to create CRUD routes for an `User` resource:
+
+- Create a file under `pages/api/users` called `[[...users]].ts`. You can also have 2 files called `index.ts` and `[id].ts` under that folder, both files will have to contain the same content.
+
+- Import the handler and the adapter you want to use, in that case we will use the prisma adapter but you can use your own one (see <Link href="/api-docs/adapters">this section</Link>)
+
+```javascript
+import NextCrud, { PrismaAdapter } from '@premieroctet/next-crud'
+```
+
+- Then create the handler and export it
+
+```javascript
+const handler = NextCrud({
+  resourceName: 'users',
+  adapter: new PrismaAdapter({
+    modelName: 'user',
+  }),
+})
+
+export default handler
+```
+
+_More info about all the available options <Link href="/api-docs/options">here</Link>_
+
+That will create the following routes:
+
+- GET `/api/users`: get all the users
+- GET `/api/users/[id]`: get one user
+- POST `/api/users`: create one user
+- PATCH/PUT `/api/users/[id]`: update one user
+- DELETE `/api/users/[id]`: delete one user
+
+You can add multiple <Link href="/query-params">query parameters</Link> in the URL to make your request more precise, especially for requests where you get data.
+
+You can then try a simple request using a tool like Postman, Insomnia or just your web browser on one of those routes.

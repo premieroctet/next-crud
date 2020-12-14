@@ -62,6 +62,24 @@ Additionally, you will receive the potential query params that has not been pars
 
 ## Prisma adapter
 
+### Options
+
+The `PrismaAdapter` class can be instantiated with the following options
+
+#### modelName
+
+The key name corresponding to the model in your generated prisma client.
+
+#### primaryKey
+
+The name of the key used to retrieve the your unique resources. Defaults to `id`.
+
+#### options
+
+The options for your prisma client. See [prisma documentation](https://www.prisma.io/docs/concepts/components/prisma-client/constructor)
+
+---
+
 ### Additional query params
 
 The Prisma adapter allows you to use an additional query param, which is related to a property used by prisma:
@@ -69,6 +87,8 @@ The Prisma adapter allows you to use an additional query param, which is related
 #### cursor
 
 A JSON object containing only 1 key and a matching value corresponding to an entry in the database which is the starting point of the result of the query. You can see that as an offset.
+
+---
 
 ### Known issues
 
