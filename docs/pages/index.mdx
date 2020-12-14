@@ -27,6 +27,8 @@ or
 
 ## Usage
 
+Here is an example to create CRUD routes for an `User` resource:
+
 - Create a file under `pages/api/users` called `[[...users]].ts`. You can also have 2 files called `index.ts` and `[id].ts` under that folder, both files will have to contain the same content.
 
 - Import the handler and the adapter you want to use, in that case we will use the prisma adapter but you can use your own one (see <Link href="/api-docs/adapters">this section</Link>)
@@ -57,5 +59,7 @@ That will create the following routes:
 - POST `/api/users`: create one user
 - PATCH/PUT `/api/users/[id]`: update one user
 - DELETE `/api/users/[id]`: delete one user
+
+You can add multiple <Link href="/query-params">query parameters</Link> in the URL to make your request more precise, especially for requests where you get data.
 
 You can then try a simple request using a tool like Postman, Insomnia or just your web browser on one of those routes.
