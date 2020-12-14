@@ -11,7 +11,12 @@ export default {
   footer: true,
   footerText: 'MIT 2020 © Premier Octet.',
   footerEditOnGitHubLink: true, // will link to the docs repo
-  logo: <span style={{ fontWeight: 'bold' }}>Next Crud</span>,
+  logo: (
+    <>
+      <img src="/icon.svg" width="32" />
+      <span style={{ fontWeight: 'bold', marginLeft: 10 }}>Next Crud</span>
+    </>
+  ),
   head: (
     <>
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
