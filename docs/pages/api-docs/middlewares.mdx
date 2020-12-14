@@ -1,0 +1,50 @@
+import Callout from 'nextra-theme-docs/callout'
+
+# Middlewares
+
+Middlewares are executed right after your data has been retrieved from the database. They are functions that accepts the following arguments:
+
+- context as the first argument. It's an object will the following shape:
+
+```typescript
+export type TMiddlewareContext<T> = {
+  req: NextApiRequest
+  res: NextApiResponse
+  result: T | T[] // the data retrieved from the database
+}
+```
+
+- a function as the second argument, which is used to execute the next middleware in the stack.
+
+<Callout emoji="⚠️">
+  The request response is done by a middleware which is added by default at the
+  end of the middlewares stack. So it is mandatory that you call the function
+  received as your second argument, or your request will end up with no data
+  inside.
+</Callout>
+
+You can use middlewares to play with your data, for example if you want to wrap your data in a specific key you'd do the following:
+
+```javascript
+middlewares: [
+  (ctx, next) => {
+    ctx.result = {
+      myCustomKey: ctx.result,
+    }
+    next()
+  },
+]
+```
+
+_Note: the following won't work, because you need to mutate directly the context object_
+
+```javascript
+middlewares: [
+  ({ result }, next) => {
+    result = {
+      myCustomKey: result,
+    }
+    next()
+  },
+]
+```

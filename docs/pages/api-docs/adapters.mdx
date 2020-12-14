@@ -1,0 +1,75 @@
+import Link from 'next/link'
+
+# Adapters
+
+An adapter is a class implementing various methods allowing you to query the data to the database your app uses.
+
+Out of the box, `next-crud` provides an adapter for [Prisma](https://www.prisma.io/), but it is easy to create your own one. Your adapter must follow the following interface:
+
+```typescript
+export interface IAdapter<T, Q = IParsedQueryParams> {
+  parseQuery(query?: IParsedQueryParams): Q
+  getAll(query?: Q): Promise<T> // GET /api/modelName
+  getOne(resourceId: string | number, query?: Q): Promise<T> // GET /api/modelname/:id
+  create(data: any, query?: Q): Promise<T> // POST /api/modelName
+  update(resourceId: string | number, data: any, query?: Q): Promise<T> // PUT/PATCH /api/modelName/:id
+  delete(resourceId: string | number, query?: Q): Promise<T> // DELETE /api/modelName/:id
+}
+```
+
+The `parseQuery` function is used to transform out basic query parsing into a shape that your database would expect. If you don't need that kind of transformation, your function can just return the `query` argument, which has the following properties:
+
+#### select
+
+An object with either boolean values or nested objects for nested fields.
+
+Example:
+
+```javascript
+{
+  user: true,
+  articles: {
+    user: true
+  }
+}
+```
+
+#### includes
+
+Same as [select](#select)
+
+#### where
+
+An object obtained by applying `JSON.parse` on the associated <Link href="/query-params#where">query param</Link>
+
+#### orderBy
+
+An object obtained by applying `JSON.parse` on the associated <Link href="/query-params#orderby">query param</Link>
+
+#### limit
+
+A number
+
+#### skip
+
+A number
+
+#### distinct
+
+A string
+
+Additionally, you will receive the potential query params that has not been parsed.
+
+## Prisma adapter
+
+### Additional query params
+
+The Prisma adapter allows you to use an additional query param, which is related to a property used by prisma:
+
+#### cursor
+
+A JSON object containing only 1 key and a matching value corresponding to an entry in the database which is the starting point of the result of the query. You can see that as an offset.
+
+### Known issues
+
+Currently the Prisma adapter does not support relations on your `where` search criteria, this will be implemented in a future version.

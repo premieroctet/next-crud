@@ -1,0 +1,17 @@
+# Callbacks
+
+Callbacks are functions executed in 3 different situations:
+
+#### onRequest
+
+A request has arrived and the callback is executed right before any action on the database. It receives 2 arguments: the request and the response.
+You can use it to add some custom content to your query params for example, or to just do some debug.
+
+#### onSuccess
+
+The request is successful and the callback is executed right before ending the handler. It receives 2 arguments: the request and the response.
+
+#### onError
+
+The request is unsuccessful and the callback is executed on the first error it meets. It receives 3 arguments: the request, the response and the thrown error.
+A simple use case would be to notify some error monitoring system like Bugsnag.
