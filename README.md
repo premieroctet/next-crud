@@ -8,7 +8,7 @@
 
 # Documentation
 
-The documentation is available [here](https://next-crud.netlify.com)
+The documentation is available [here](https://next-crud.js.org/)
 
 # Example
 
