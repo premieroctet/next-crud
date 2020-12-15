@@ -32,7 +32,7 @@ import NextCrud, { PrismaAdapter } from '@premieroctet/next-crud'
 const handler = NextCrud({
   resourceName: 'users', // Same as your folder name
   adapter: new PrismaAdapter({
-    modelName: 'User', // Prisma model name
+    modelName: 'user', // Prisma model name, must match the one generated in your prisma client
   }),
 })
 
