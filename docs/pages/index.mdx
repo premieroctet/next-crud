@@ -27,7 +27,15 @@ or
 
 ## Usage
 
-Here is an example to create CRUD routes for an `User` resource:
+Here is an example to create CRUD routes for an `User` resource given the following Prisma schema:
+
+```sql
+model User {
+  id              Int        @id @default(autoincrement())
+  name            String?
+  email           String?
+}
+```
 
 - Create a file under `pages/api/users` called `[[...users]].ts`. You can also have 2 files called `index.ts` and `[id].ts` under that folder, both files will have to contain the same content.
 
@@ -41,9 +49,9 @@ import NextCrud, { PrismaAdapter } from '@premieroctet/next-crud'
 
 ```javascript
 const handler = NextCrud({
-  resourceName: 'users',
+  resourceName: 'users', // Same as your folder name
   adapter: new PrismaAdapter({
-    modelName: 'user',
+    modelName: 'User', // Prisma model name
   }),
 })
 
@@ -54,11 +62,14 @@ _More info about all the available options <Link href="/api-docs/options">here</
 
 That will create the following routes:
 
-- GET `/api/users`: get all the users
-- GET `/api/users/[id]`: get one user
-- POST `/api/users`: create one user
-- PATCH/PUT `/api/users/[id]`: update one user
-- DELETE `/api/users/[id]`: delete one user
+|              | Endpoint                | Description               |
+| ------------ | ----------------------- | ------------------------- |
+| List         | GET `/api/users`        | Get all the users         |
+| Get          | GET `/api/users/[id]`   | Get one user              |
+| Add          | POST `/api/users`       | Create one user           |
+| Edit         | PUT `/api/users/[id]`   | Update one user           |
+| Partial edit | PATCH `/api/users`      | Update one user (partial) |
+| Delete       | DELETE`/api/users/[id]` | Delete one user           |
 
 You can add multiple <Link href="/query-params">query parameters</Link> in the URL to make your request more precise, especially for requests where you get data.
 
