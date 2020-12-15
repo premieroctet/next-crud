@@ -1,6 +1,6 @@
 src
 tsconfig.json
-jest.config.json
+jest.config.js
 .prettierrc
 .gitignore
 .eslintrc.json
@@ -8,4 +8,4 @@ jest.config.json
 example
 .github
 __tests__
-node_modules
+docs
