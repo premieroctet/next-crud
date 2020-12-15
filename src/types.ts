@@ -30,6 +30,7 @@ export interface IAdapter<T, Q> {
   delete(resourceId: string | number, query?: Q): Promise<T>
   connect?: () => Promise<void>
   disconnect?: () => Promise<void>
+  handleError?: (err: Error) => void
 }
 
 export type TMiddlewareContext<T> = {
