@@ -1,3 +1,4 @@
+import HttpError from '../httpError'
 import { IUniqueResourceHandlerParams } from '../types'
 import { executeMiddlewares } from '../utils'
 
@@ -12,6 +13,11 @@ async function getOneHandler<T, Q>({
   request,
 }: IGetOneHandler<T, Q>): Promise<void> {
   const resource = await adapter.getOne(resourceId, query)
+
+  if (!resource) {
+    throw new HttpError(404, `resource ${resourceId} not found`)
+  }
+
   await executeMiddlewares(
     [
       ...middlewares,

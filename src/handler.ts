@@ -8,6 +8,7 @@ import {
   getOneHandler,
   updateHandler,
 } from './handlers'
+import HttpError from './httpError'
 import { parseQuery } from './queryParser'
 import { IAdapter, IHandlerParams, RouteType, TMiddleware } from './types'
 import { getRouteType, formatResourceId as formatResourceIdUtil } from './utils'
@@ -182,7 +183,11 @@ function NextCrud<T, Q = any>({
       await onSuccess?.(req, res)
     } catch (e) {
       await onError?.(req, res, e)
-      res.status(500).send(e.message)
+      if (e instanceof HttpError) {
+        res.status(e.statusCode).send(e.message)
+      } else {
+        res.status(500).send(e.message)
+      }
     } finally {
       await adapter.disconnect?.()
       res.end()
