@@ -8,6 +8,7 @@ import {
   getOneHandler,
   updateHandler,
 } from './handlers'
+import HttpError from './httpError'
 import { parseQuery } from './queryParser'
 import { IAdapter, IHandlerParams, RouteType, TMiddleware } from './types'
 import { getRouteType, formatResourceId as formatResourceIdUtil } from './utils'
@@ -120,35 +121,43 @@ function NextCrud<T, Q = any>({
       const resourceIdFormatted = formatResourceId(resourceId)
 
       const executeCrud = async () => {
-        switch (routeType) {
-          case RouteType.READ_ONE:
-            await getOneHandler({
-              ...params,
-              resourceId: resourceIdFormatted,
-            })
-            break
-          case RouteType.READ_ALL:
-            await getAllHandler<T, Q>(params)
-            break
-          case RouteType.CREATE:
-            await createHandler<T, Q>({ ...params, body })
-            break
-          case RouteType.UPDATE:
-            await updateHandler<T, Q>({
-              ...params,
-              resourceId: resourceIdFormatted,
-              body,
-            })
-            break
-          case RouteType.DELETE:
-            await deleteHandler<T, Q>({
-              ...params,
-              resourceId: resourceIdFormatted,
-            })
-            break
-          case null:
-            res.status(404)
-            break
+        try {
+          switch (routeType) {
+            case RouteType.READ_ONE:
+              await getOneHandler({
+                ...params,
+                resourceId: resourceIdFormatted,
+              })
+              break
+            case RouteType.READ_ALL:
+              await getAllHandler<T, Q>(params)
+              break
+            case RouteType.CREATE:
+              await createHandler<T, Q>({ ...params, body })
+              break
+            case RouteType.UPDATE:
+              await updateHandler<T, Q>({
+                ...params,
+                resourceId: resourceIdFormatted,
+                body,
+              })
+              break
+            case RouteType.DELETE:
+              await deleteHandler<T, Q>({
+                ...params,
+                resourceId: resourceIdFormatted,
+              })
+              break
+            case null:
+              res.status(404)
+              break
+          }
+        } catch (e) {
+          if (adapter.handleError && !(e instanceof HttpError)) {
+            adapter.handleError(e)
+          } else {
+            throw e
+          }
         }
       }
 
@@ -182,7 +191,11 @@ function NextCrud<T, Q = any>({
       await onSuccess?.(req, res)
     } catch (e) {
       await onError?.(req, res, e)
-      res.status(500).send(e.message)
+      if (e instanceof HttpError) {
+        res.status(e.statusCode).send(e.message)
+      } else {
+        res.status(500).send(e.message)
+      }
     } finally {
       await adapter.disconnect?.()
       res.end()

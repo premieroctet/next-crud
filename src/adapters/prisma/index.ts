@@ -1,5 +1,12 @@
-// @ts-ignore
-import { PrismaClient, PrismaAction, PrismaClientOptions } from '@prisma/client'
+import {
+  PrismaClient,
+  PrismaAction,
+  PrismaClientOptions,
+  PrismaClientKnownRequestError,
+  PrismaClientValidationError,
+  // @ts-ignore
+} from '@prisma/client'
+import HttpError from '../../httpError'
 import { IAdapter, IParsedQueryParams } from '../../types'
 import { IPrismaParsedQueryParams } from './types'
 import { parsePrismaCursor } from './utils/parseCursor'
@@ -31,6 +38,24 @@ export default class PrismaAdapter<T>
     this.prismaDelegate = this.prismaClient[modelName]
     this.primaryKey = primaryKey
     this.manyRelations = manyRelations
+  }
+
+  handleError(err: Error) {
+    console.error(err.message)
+    if (
+      err instanceof PrismaClientKnownRequestError ||
+      err instanceof PrismaClientValidationError
+    ) {
+      throw new HttpError(
+        400,
+        'invalid request, check your server logs for more info'
+      )
+    } else {
+      throw new HttpError(
+        500,
+        'an unknown error occured, check your server logs for more info'
+      )
+    }
   }
 
   parseQuery(query?: IParsedQueryParams) {

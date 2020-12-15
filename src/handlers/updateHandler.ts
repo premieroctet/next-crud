@@ -1,3 +1,4 @@
+import HttpError from '../httpError'
 import { IUniqueResourceHandlerParams } from '../types'
 import { executeMiddlewares } from '../utils'
 
@@ -14,20 +15,26 @@ async function updateHandler<T, Q>({
   middlewares,
   request,
 }: IUpdateHandler<T, Q>): Promise<void> {
-  const updatedResource = await adapter.update(resourceId, body, query)
-  await executeMiddlewares(
-    [
-      ...middlewares,
-      ({ result }) => {
-        response.send(result)
-      },
-    ],
-    {
-      req: request,
-      res: response,
-      result: updatedResource,
-    }
-  )
+  const resource = await adapter.getOne(resourceId, query)
+
+  if (resource) {
+    const updatedResource = await adapter.update(resourceId, body, query)
+    await executeMiddlewares(
+      [
+        ...middlewares,
+        ({ result }) => {
+          response.send(result)
+        },
+      ],
+      {
+        req: request,
+        res: response,
+        result: updatedResource,
+      }
+    )
+  } else {
+    throw new HttpError(404, `resource ${resourceId} not found`)
+  }
 }
 
 export default updateHandler
