@@ -47,7 +47,7 @@ And get your full featured CRUD routes!
 | Get          | GET `/api/users/[id]`   | Get one user              |
 | Add          | POST `/api/users`       | Create one user           |
 | Edit         | PUT `/api/users/[id]`   | Update one user           |
-| Partial edit | PATCH `/api/users`      | Update one user (partial) |
+| Partial edit | PATCH `/api/users/[id]` | Update one user (partial) |
 | Delete       | DELETE`/api/users/[id]` | Delete one user           |
 
 # Example
