@@ -2,8 +2,9 @@ import Logo from './components/Logo'
 
 export default {
   repository: 'https://github.com/premieroctet/next-crud',
+  docsRepository: 'https://github.com/premieroctet/next-crud',
   branch: 'master', // branch of docs
-  path: 'docs', // path of docs
+  path: '/docs', // path of docs
   titleSuffix: ' – Next Crud - Full-featured CRUD routes for Next.js',
   nextLinks: true,
   prevLinks: true,
