@@ -11,7 +11,7 @@ export default {
   customSearch: null, // customizable, you can use algolia for example
   darkMode: true,
   footer: true,
-  footerText: 'MIT 2020 © Premier Octet.',
+  footerText: `MIT ${new Date().getFullYear()} © Premier Octet.`,
   footerEditOnGitHubLink: true, // will link to the docs repo
   logo: (
     <div className="flex items-center">
