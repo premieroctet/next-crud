@@ -45,7 +45,7 @@ describe('Prisma parse where', () => {
   })
 
   it('should parse $and', () => {
-    const baseQuery: TWhereField = {
+    let baseQuery: TWhereField = {
       $and: {
         username: {
           $cont: 'foo',
@@ -65,10 +65,41 @@ describe('Prisma parse where', () => {
         },
       }
     )
+
+    baseQuery = {
+      $and: {
+        username: {
+          $cont: 'foo',
+        },
+        'posts.author.id': 1,
+      },
+    }
+
+    expect(
+      parsePrismaWhere(baseQuery, ['posts.author'])
+    ).toEqual<TPrismaWhereField>(
+      // @ts-ignore
+      {
+        AND: {
+          username: {
+            contains: 'foo',
+          },
+          posts: {
+            some: {
+              author: {
+                some: {
+                  id: 1,
+                },
+              },
+            },
+          },
+        },
+      }
+    )
   })
 
   it('should parse $or', () => {
-    const baseQuery: TWhereField = {
+    let baseQuery: TWhereField = {
       $or: {
         username: {
           $cont: 'foo',
@@ -88,10 +119,41 @@ describe('Prisma parse where', () => {
         },
       }
     )
+
+    baseQuery = {
+      $or: {
+        username: {
+          $cont: 'foo',
+        },
+        'posts.author.id': 1,
+      },
+    }
+
+    expect(
+      parsePrismaWhere(baseQuery, ['posts.author'])
+    ).toEqual<TPrismaWhereField>(
+      // @ts-ignore
+      {
+        OR: {
+          username: {
+            contains: 'foo',
+          },
+          posts: {
+            some: {
+              author: {
+                some: {
+                  id: 1,
+                },
+              },
+            },
+          },
+        },
+      }
+    )
   })
 
   it('should parse $not', () => {
-    const baseQuery: TWhereField = {
+    let baseQuery: TWhereField = {
       $not: {
         username: {
           $cont: 'foo',
@@ -111,5 +173,82 @@ describe('Prisma parse where', () => {
         },
       }
     )
+
+    baseQuery = {
+      $not: {
+        username: {
+          $cont: 'foo',
+        },
+        'posts.author.id': 1,
+      },
+    }
+
+    expect(
+      parsePrismaWhere(baseQuery, ['posts.author'])
+    ).toEqual<TPrismaWhereField>(
+      // @ts-ignore
+      {
+        NOT: {
+          username: {
+            contains: 'foo',
+          },
+          posts: {
+            some: {
+              author: {
+                some: {
+                  id: 1,
+                },
+              },
+            },
+          },
+        },
+      }
+    )
+  })
+
+  it('should handle simple relations', () => {
+    const baseQuery: TWhereField = {
+      'posts.content': {
+        $cont: 'Hello',
+      },
+    }
+
+    expect(parsePrismaWhere(baseQuery, ['posts'])).toEqual<TPrismaWhereField>({
+      posts: {
+        some: {
+          content: {
+            contains: 'Hello',
+          },
+        },
+      },
+    })
+  })
+
+  it('should handle nested relations', () => {
+    const baseQuery: TWhereField = {
+      'posts.content': {
+        $cont: 'Hello',
+      },
+      'posts.author.id': 1,
+      'posts.id': 1,
+    }
+
+    expect(
+      parsePrismaWhere(baseQuery, ['posts', 'posts.author'])
+    ).toEqual<TPrismaWhereField>({
+      posts: {
+        some: {
+          id: 1,
+          content: {
+            contains: 'Hello',
+          },
+          author: {
+            some: {
+              id: 1,
+            },
+          },
+        },
+      },
+    })
   })
 })

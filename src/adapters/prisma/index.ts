@@ -1,10 +1,14 @@
 import {
-  PrismaClient,
-  PrismaAction,
-  PrismaClientOptions,
-  PrismaClientKnownRequestError,
-  PrismaClientValidationError,
   // @ts-ignore
+  PrismaClient,
+  // @ts-ignore
+  PrismaAction,
+  // @ts-ignore
+  PrismaClientOptions,
+  // @ts-ignore
+  PrismaClientKnownRequestError,
+  // @ts-ignore
+  PrismaClientValidationError,
 } from '@prisma/client'
 import HttpError from '../../httpError'
 import { IAdapter, IParsedQueryParams } from '../../types'
@@ -14,18 +18,18 @@ import { parsePrismaOrderBy } from './utils/parseOrderBy'
 import { parsePrismaRecursiveField } from './utils/parseRecursive'
 import { parsePrismaWhere } from './utils/parseWhere'
 
-interface IAdapterCtorArgs<T> {
+interface IAdapterCtorArgs<T, I> {
   modelName: keyof PrismaClient
   primaryKey?: string
   options?: PrismaClientOptions
-  manyRelations?: Array<keyof T>
+  manyRelations?: Array<keyof I>
 }
 
-export default class PrismaAdapter<T>
+export default class PrismaAdapter<T, I>
   implements IAdapter<T, IPrismaParsedQueryParams> {
   private prismaDelegate: Record<PrismaAction, (...args: any[]) => Promise<T>>
   private primaryKey: string
-  private manyRelations: Array<keyof T>
+  private manyRelations: Array<keyof I>
   private prismaClient: PrismaClient
 
   constructor({
@@ -33,7 +37,7 @@ export default class PrismaAdapter<T>
     primaryKey = 'id',
     options,
     manyRelations = [],
-  }: IAdapterCtorArgs<T>) {
+  }: IAdapterCtorArgs<T, I>) {
     this.prismaClient = new PrismaClient(options)
     this.prismaDelegate = this.prismaClient[modelName]
     this.primaryKey = primaryKey
@@ -67,9 +71,9 @@ export default class PrismaAdapter<T>
     if (query.include) {
       parsed.include = parsePrismaRecursiveField(query.include, 'include')
     }
-    if (query.where) {
+    if (query.originalQuery.where) {
       parsed.where = parsePrismaWhere(
-        query.where,
+        JSON.parse(query.originalQuery.where),
         this.manyRelations as string[]
       )
     }
@@ -82,12 +86,14 @@ export default class PrismaAdapter<T>
     if (query.skip) {
       parsed.skip = query.skip
     }
-    if (query.cursor) {
-      parsed.cursor = parsePrismaCursor(JSON.parse(query.cursor))
+    if (query.originalQuery.cursor) {
+      parsed.cursor = parsePrismaCursor(JSON.parse(query.originalQuery.cursor))
     }
     if (query.distinct) {
       parsed.distinct = query.distinct
     }
+
+    console.log('parsed where', parsed.where)
 
     return parsed
   }

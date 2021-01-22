@@ -1,10 +1,11 @@
-import { User } from '@prisma/client'
+import { User, UserInclude } from '@prisma/client'
 import NextCrud, { PrismaAdapter } from '@premieroctet/next-crud'
 
 const handler = NextCrud({
   resourceName: 'users',
-  adapter: new PrismaAdapter<User>({
+  adapter: new PrismaAdapter<User, UserInclude>({
     modelName: 'user',
+    manyRelations: ['posts'],
   }),
   onRequest: (req) => {
     console.log(`request occured on URL ${req.url}`)
