@@ -18,18 +18,18 @@ import { parsePrismaOrderBy } from './utils/parseOrderBy'
 import { parsePrismaRecursiveField } from './utils/parseRecursive'
 import { parsePrismaWhere } from './utils/parseWhere'
 
-interface IAdapterCtorArgs<T, I> {
+interface IAdapterCtorArgs<T> {
   modelName: keyof PrismaClient
   primaryKey?: string
   options?: PrismaClientOptions
-  manyRelations?: Array<keyof I>
+  manyRelations?: string[]
 }
 
-export default class PrismaAdapter<T, I>
+export default class PrismaAdapter<T>
   implements IAdapter<T, IPrismaParsedQueryParams> {
   private prismaDelegate: Record<PrismaAction, (...args: any[]) => Promise<T>>
   private primaryKey: string
-  private manyRelations: Array<keyof I>
+  private manyRelations: string[]
   private prismaClient: PrismaClient
 
   constructor({
@@ -37,7 +37,7 @@ export default class PrismaAdapter<T, I>
     primaryKey = 'id',
     options,
     manyRelations = [],
-  }: IAdapterCtorArgs<T, I>) {
+  }: IAdapterCtorArgs<T>) {
     this.prismaClient = new PrismaClient(options)
     this.prismaDelegate = this.prismaClient[modelName]
     this.primaryKey = primaryKey
@@ -92,8 +92,6 @@ export default class PrismaAdapter<T, I>
     if (query.distinct) {
       parsed.distinct = query.distinct
     }
-
-    console.log('parsed where', parsed.where)
 
     return parsed
   }
