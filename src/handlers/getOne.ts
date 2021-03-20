@@ -8,6 +8,7 @@ async function getOneHandler<T, Q>({
   adapter,
   response,
   resourceId,
+  resourceName,
   query,
   middlewares,
   request,
@@ -15,7 +16,7 @@ async function getOneHandler<T, Q>({
   const resource = await adapter.getOne(resourceId, query)
 
   if (!resource) {
-    throw new HttpError(404, `resource ${resourceId} not found`)
+    throw new HttpError(404, `${resourceName} ${resourceId} not found`)
   }
 
   await executeMiddlewares(

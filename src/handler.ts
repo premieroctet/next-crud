@@ -127,6 +127,7 @@ function NextCrud<T, Q = any>({
               await getOneHandler({
                 ...params,
                 resourceId: resourceIdFormatted,
+                resourceName,
               })
               break
             case RouteType.READ_ALL:
@@ -139,6 +140,7 @@ function NextCrud<T, Q = any>({
               await updateHandler<T, Q>({
                 ...params,
                 resourceId: resourceIdFormatted,
+                resourceName,
                 body,
               })
               break
@@ -146,6 +148,7 @@ function NextCrud<T, Q = any>({
               await deleteHandler<T, Q>({
                 ...params,
                 resourceId: resourceIdFormatted,
+                resourceName,
               })
               break
             case null:

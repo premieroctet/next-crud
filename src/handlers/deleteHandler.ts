@@ -8,6 +8,7 @@ async function deleteHandler<T, Q>({
   adapter,
   response,
   resourceId,
+  resourceName,
   query,
   request,
   middlewares,
@@ -30,7 +31,7 @@ async function deleteHandler<T, Q>({
       }
     )
   } else {
-    throw new HttpError(404, `resource ${resourceId} not found`)
+    throw new HttpError(404, `${resourceName} ${resourceId} not found`)
   }
 }
 
