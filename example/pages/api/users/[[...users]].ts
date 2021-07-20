@@ -5,6 +5,7 @@ const handler = NextCrud({
   resourceName: 'users',
   adapter: new PrismaAdapter<User>({
     modelName: 'user',
+    manyRelations: ['posts'],
   }),
   onRequest: (req) => {
     console.log(`request occured on URL ${req.url}`)

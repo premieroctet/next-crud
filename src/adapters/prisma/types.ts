@@ -27,13 +27,20 @@ export type TPrismaFieldFilterOperator = {
 }
 
 export type TPrismaFieldFilter = {
-  [key: string]: TSearchCondition | TPrismaFieldFilterOperator
+  [key: string]:
+    | TSearchCondition
+    | TPrismaFieldFilterOperator
+    | TPrismaRelationFitler
 }
 
 export type TPrismaWhereField = TPrismaFieldFilter & {
   AND?: TPrismaFieldFilter
   OR?: TPrismaFieldFilter
   NOT?: TPrismaFieldFilter
+}
+
+export type TPrismaRelationFitler = {
+  some: TSearchCondition | TPrismaFieldFilter
 }
 
 export type TPrismaOrderBy = {

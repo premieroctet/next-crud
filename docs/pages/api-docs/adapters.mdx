@@ -79,6 +79,10 @@ The name of the key used to retrieve the your unique resources. Defaults to `id`
 
 The options for your prisma client. See [prisma documentation](https://www.prisma.io/docs/concepts/components/prisma-client/constructor)
 
+### manyRelations
+
+An array containing all the relations and nested relations of your modal that could be queried from the `where` filter. For nested relations, split them with a `.`, e.g: `posts.author`
+
 ---
 
 ### Additional query params
@@ -88,9 +92,3 @@ The Prisma adapter allows you to use an additional query param, which is related
 #### cursor
 
 A JSON object containing only 1 key and a matching value corresponding to an entry in the database which is the starting point of the result of the query. You can see that as an offset.
-
----
-
-### Known issues
-
-Currently the Prisma adapter does not support relations on your `where` search criteria, this will be implemented in a future version.

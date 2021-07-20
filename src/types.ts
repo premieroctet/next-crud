@@ -95,5 +95,7 @@ export interface IParsedQueryParams {
   limit?: number
   skip?: number
   distinct?: string
-  [key: string]: any
+  originalQuery?: {
+    [key: string]: any
+  }
 }

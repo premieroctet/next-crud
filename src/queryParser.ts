@@ -84,7 +84,7 @@ export const parseQuery = (queryString?: string): IParsedQueryParams => {
     }
 
     return {
-      ...query,
+      originalQuery: query,
       ...parsedQuery,
     }
   }
