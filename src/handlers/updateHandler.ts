@@ -11,6 +11,7 @@ async function updateHandler<T, Q>({
   response,
   body,
   resourceId,
+  resourceName,
   query,
   middlewares,
   request,
@@ -33,7 +34,7 @@ async function updateHandler<T, Q>({
       }
     )
   } else {
-    throw new HttpError(404, `resource ${resourceId} not found`)
+    throw new HttpError(404, `${resourceName} ${resourceId} not found`)
   }
 }
 

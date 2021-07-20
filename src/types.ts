@@ -19,6 +19,7 @@ export interface IHandlerParams<T, Q> {
 export interface IUniqueResourceHandlerParams<T, Q>
   extends IHandlerParams<T, Q> {
   resourceId: string | number
+  resourceName: string
 }
 
 export interface IAdapter<T, Q> {
