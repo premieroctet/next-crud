@@ -11,7 +11,7 @@ import {
 import HttpError from './httpError'
 import { parseQuery } from './queryParser'
 import { IAdapter, IHandlerParams, RouteType, TMiddleware } from './types'
-import { getRouteType, formatResourceId as formatResourceIdUtil } from './utils'
+import { getRouteType, formatResourceId as formatResourceIdUtil, GetRouteType } from './utils'
 
 type TCallback<T extends any = undefined> = (
   req: NextApiRequest,
@@ -40,7 +40,7 @@ interface INextCrudOptions<T, Q> {
   adapter: IAdapter<T, Q>
   resourceName: string
   formatResourceId?: (resourceId: string) => string | number
-  onRequest?: TCallback<{ routeType: RouteType, resourceId: string }>
+  onRequest?: TCallback<GetRouteType>
   onSuccess?: TCallback
   onError?: TErrorCallback
   middlewares?: TMiddleware<T>[]
