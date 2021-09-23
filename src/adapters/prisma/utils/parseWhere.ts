@@ -31,8 +31,13 @@ const operatorsAssociation: {
   $starts: 'startsWith',
 }
 
+const isDateString = (value: string) =>
+  /^\d{4}-[01]\d-[0-3]\d(?:T[0-2]\d:[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|[-+][0-2]\d(?::?[0-5]\d)?)?)?$/g.test(
+    value
+  )
+
 const getSearchValue = (originalValue: any): TSearchCondition => {
-  if (types.isDate(originalValue)) {
+  if (isDateString(originalValue)) {
     return new Date(originalValue)
   }
 

@@ -44,6 +44,14 @@ describe('Parse select', () => {
       },
     })
   })
+
+  it('should fail if select is an array', () => {
+    const query = 'select[]=user&select[]=post.user'
+
+    expect(() => parseQuery(query)).toThrowError(
+      new Error('select query param must be a string')
+    )
+  })
 })
 
 describe('Parse include', () => {
@@ -144,6 +152,12 @@ describe('Parse orderBy', () => {
 
   it('should throw an error with invalid property', () => {
     const query = 'orderBy={"id": "foo"}'
+
+    expect(() => parseQuery(query)).toThrow()
+  })
+
+  it('should throw an error with an empty object value', () => {
+    const query = 'orderBy={}'
 
     expect(() => parseQuery(query)).toThrow()
   })

@@ -16,6 +16,7 @@
     "test": "jest"
   },
   "devDependencies": {
+    "@jest-mock/express": "^1.4.4",
     "@types/jest": "^26.0.15",
     "@types/lodash.isobject": "^3.0.6",
     "@types/lodash.set": "^4.3.6",

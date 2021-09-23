@@ -14,6 +14,17 @@ describe('Prisma parse where', () => {
     )
   })
 
+  it('should handle a date value', () => {
+    const now = new Date().toISOString()
+    const baseQuery = {
+      createdAt: now,
+    }
+
+    expect(parsePrismaWhere(baseQuery, [])).toEqual<TPrismaWhereField>({
+      createdAt: new Date(now),
+    })
+  })
+
   it('should handle operators', () => {
     const baseQuery: TWhereField = {
       username: {
