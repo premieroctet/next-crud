@@ -11,11 +11,12 @@ import {
 import HttpError from './httpError'
 import { parseQuery } from './queryParser'
 import { IAdapter, IHandlerParams, RouteType, TMiddleware } from './types'
-import { getRouteType, formatResourceId as formatResourceIdUtil } from './utils'
+import { getRouteType, formatResourceId as formatResourceIdUtil, GetRouteType } from './utils'
 
-type TCallback = (
+type TCallback<T extends any = undefined> = (
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
+  options?: T
 ) => void | Promise<void>
 type TErrorCallback = (
   req: NextApiRequest,
@@ -39,7 +40,7 @@ interface INextCrudOptions<T, Q> {
   adapter: IAdapter<T, Q>
   resourceName: string
   formatResourceId?: (resourceId: string) => string | number
-  onRequest?: TCallback
+  onRequest?: TCallback<GetRouteType>
   onSuccess?: TCallback
   onError?: TErrorCallback
   middlewares?: TMiddleware<T>[]
@@ -101,7 +102,7 @@ function NextCrud<T, Q = any>({
         resourceName,
       })
 
-      await onRequest?.(req, res)
+      await onRequest?.(req, res, { routeType, resourceId })
 
       if (!accessibleRoutes.includes(routeType) && !customHandlers.length) {
         res.status(404).end()
