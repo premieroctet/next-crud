@@ -94,7 +94,9 @@ describe('Handler', () => {
     })
 
     await handler(req, res)
-    expect(onRequest).toHaveBeenCalledWith(req, res)
+    expect(onRequest).toHaveBeenCalledWith(req, res, {
+      routeType: RouteType.READ_ALL,
+    })
   })
 
   it('should run onSuccess', async () => {
