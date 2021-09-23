@@ -151,9 +151,6 @@ function NextCrud<T, Q = any>({
                 resourceName,
               })
               break
-            case null:
-              res.status(404)
-              break
           }
         } catch (e) {
           if (adapter.handleError && !(e instanceof HttpError)) {

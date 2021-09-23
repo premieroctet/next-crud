@@ -120,6 +120,7 @@ export const executeMiddlewares = async <T extends any>(
   let prevIndex = -1
 
   const runner = async (index: number) => {
+    /* istanbul ignore next */
     if (index === prevIndex) {
       throw new Error('too many next() invocations')
     }
@@ -128,11 +129,11 @@ export const executeMiddlewares = async <T extends any>(
     const fn = validMiddlewares[index]
 
     if (fn) {
-      fn(ctx, () => {
+      await fn(ctx, () => {
         return runner(index + 1)
       })
     }
   }
 
-  await runner(0)
+  return runner(0)
 }

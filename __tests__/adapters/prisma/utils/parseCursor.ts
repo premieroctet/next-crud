@@ -33,4 +33,8 @@ describe('Parse prisma cursor', () => {
       id: 1,
     })
   })
+
+  it('should throw an error with an empty cursor object', () => {
+    expect(() => parsePrismaCursor({})).toThrow()
+  })
 })
