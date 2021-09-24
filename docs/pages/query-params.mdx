@@ -4,10 +4,12 @@ You can add some criteria to your queries using the query params. Here is the li
 
 #### select
 
-A list of fields which will be retrieved to the model. You can select nested fields by just separating the fields with a `.`. Example:
+A list of fields which will be retrieved to the model. You can select nested fields by just separating the fields with a `.`.
+
+Example :
 
 ```
-select=id,username,articles,articles.id
+/api/users?select=id,username,articles,articles.id
 ```
 
 will return a response with the following shape
@@ -27,6 +29,14 @@ will return a response with the following shape
 #### include
 
 A list of fields which corresponds to the model relations to include. You can aswell include nested fields just like you would do with `select`
+
+Example :
+
+```
+/api/users?include=articles
+```
+
+> With Prisma, make sure you don't use `include` in combination with `select` or the request will fail.
 
 #### where
 
@@ -51,6 +61,12 @@ We also provide 3 operators to combine multiple search:
 - `$or` (`OR`), should be an object, this will apply an `OR` condition between each properties of the object
 - `$not` (`NOT`), should be an object, this should match all the data in the database that do not match those criteria.
 
+Example :
+
+```
+/api/users?where={"email":{"$and":{"$starts":"john", "$ends":".com"}}}
+```
+
 #### orderBy
 
 A JSON representation of the field to order by and its direction. This should be an object containing only 1 key (name of the field to order by) with a valid order operator. These are the 2 available operators:
@@ -58,14 +74,38 @@ A JSON representation of the field to order by and its direction. This should be
 - `$asc` for ascending order
 - `$desc` for descending order
 
+Example :
+
+```
+/api/users?orderBy={"name":"$asc"}
+```
+
 #### limit
 
 A number representing the number of element to return
+
+Example :
+
+```
+/api/users?limit=2
+```
 
 #### skip
 
 The number of element to skip the first n elements from the query
 
+Example :
+
+```
+/api/users?skip=2
+```
+
 #### distinct
 
 A field name on which the duplicates are removed from the dataset
+
+Example :
+
+```
+/api/users?distinct=name
+```

@@ -92,3 +92,9 @@ The Prisma adapter allows you to use an additional query param, which is related
 #### cursor
 
 A JSON object containing only 1 key and a matching value corresponding to an entry in the database which is the starting point of the result of the query. You can see that as an offset.
+
+Example :
+
+```
+/api/users?cursor={"id":1}
+```
