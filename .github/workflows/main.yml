@@ -35,5 +35,7 @@ jobs:
         run: yarn
       - name: Check Types
         run: yarn tsc --noEmit
+      - name: Prepare prisma for tests
+        run: cd __tests__ && npx prisma db push --preview-feature
       - name: Run tests
         run: yarn test
