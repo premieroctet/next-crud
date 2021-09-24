@@ -13,7 +13,7 @@
     "clean": "rimraf dist",
     "lint": "eslint",
     "prepublishOnly": "yarn lint && yarn build",
-    "test": "jest"
+    "test": "jest -i"
   },
   "devDependencies": {
     "@jest-mock/express": "^1.4.4",
