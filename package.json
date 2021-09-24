@@ -13,7 +13,7 @@
     "clean": "rimraf dist",
     "lint": "eslint",
     "prepublishOnly": "yarn lint && yarn build",
-    "test": "jest"
+    "test": "jest -i"
   },
   "devDependencies": {
     "@jest-mock/express": "^1.4.4",
@@ -34,7 +34,7 @@
     "typescript": "^4.1.2"
   },
   "optionalDependencies": {
-    "@prisma/client": "^2.0.0"
+    "@prisma/client": ">=2"
   },
   "husky": {
     "hooks": {

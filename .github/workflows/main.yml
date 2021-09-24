@@ -12,7 +12,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [12.x]
+        node-version: [15.x]
 
     steps:
       - uses: actions/checkout@v2
@@ -35,5 +35,7 @@ jobs:
         run: yarn
       - name: Check Types
         run: yarn tsc --noEmit
+      - name: Prepare prisma for tests
+        run: yarn add @prisma/client@^2 && cd __tests__/adapters/prisma && npx prisma@2 db push
       - name: Run tests
         run: yarn test

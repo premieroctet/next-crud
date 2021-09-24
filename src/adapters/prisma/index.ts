@@ -26,7 +26,8 @@ interface IAdapterCtorArgs<T> {
 }
 
 export default class PrismaAdapter<T>
-  implements IAdapter<T, IPrismaParsedQueryParams> {
+  implements IAdapter<T, IPrismaParsedQueryParams>
+{
   private prismaDelegate: Record<PrismaAction, (...args: any[]) => Promise<T>>
   private primaryKey: string
   private manyRelations: string[]
@@ -39,6 +40,7 @@ export default class PrismaAdapter<T>
     manyRelations = [],
   }: IAdapterCtorArgs<T>) {
     this.prismaClient = new PrismaClient(options)
+    // @ts-ignore
     this.prismaDelegate = this.prismaClient[modelName]
     this.primaryKey = primaryKey
     this.manyRelations = manyRelations
@@ -71,7 +73,7 @@ export default class PrismaAdapter<T>
     if (query.include) {
       parsed.include = parsePrismaRecursiveField(query.include, 'include')
     }
-    if (query.originalQuery.where) {
+    if (query.originalQuery?.where) {
       parsed.where = parsePrismaWhere(
         JSON.parse(query.originalQuery.where),
         this.manyRelations as string[]
@@ -86,7 +88,7 @@ export default class PrismaAdapter<T>
     if (query.skip) {
       parsed.skip = query.skip
     }
-    if (query.originalQuery.cursor) {
+    if (query.originalQuery?.cursor) {
       parsed.cursor = parsePrismaCursor(JSON.parse(query.originalQuery.cursor))
     }
     if (query.distinct) {
