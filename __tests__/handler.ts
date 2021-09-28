@@ -1,15 +1,30 @@
 import { getMockReq, getMockRes } from '@jest-mock/express'
 import * as http from 'http'
 import NextCrud from '../src/handler'
-import { IAdapter, IParsedQueryParams, RouteType } from '../src/types'
+import {
+  IAdapter,
+  IParsedQueryParams,
+  RouteType,
+  TPaginationData,
+} from '../src/types'
 import HttpError from '../src/httpError'
 
 class NoopAdapter implements IAdapter<unknown, unknown> {
+  async getPaginationData(
+    query: unknown,
+    lastElement?: unknown
+  ): Promise<TPaginationData> {
+    return {
+      total: 1,
+      pageCount: 1,
+      page: 1,
+    }
+  }
   parseQuery(query?: IParsedQueryParams): unknown {
     return {}
   }
-  async getAll(query?: unknown): Promise<unknown> {
-    return {}
+  async getAll(query?: unknown): Promise<unknown[]> {
+    return []
   }
   async getOne(resourceId: string | number, query?: unknown): Promise<unknown> {
     return {}
@@ -551,6 +566,42 @@ describe('Handler', () => {
       await handler(req, res)
 
       expect(res.status).toHaveBeenCalledWith(404)
+    })
+  })
+
+  describe('Pagination', () => {
+    it('should get page based pagination data', async () => {
+      const mockResources = [{ id: 1 }]
+      const getAll = jest.fn(() => {
+        return mockResources
+      })
+      const getPaginationData = jest.fn(() => {
+        return {
+          total: mockResources.length,
+          pageCount: 1,
+        }
+      })
+      const adapter = generateNoopAdapter({ getAll, getPaginationData })
+
+      const handler = NextCrud({
+        adapter,
+        resourceName: 'foo',
+      })
+
+      const { res } = getMockRes()
+      const req = getMockReq({
+        url: '/api/foo?page=1',
+        method: 'GET',
+      })
+
+      await handler(req, res)
+      expect(res.send).toHaveBeenCalledWith({
+        data: mockResources,
+        pagination: {
+          total: 1,
+          pageCount: 1,
+        },
+      })
     })
   })
 })

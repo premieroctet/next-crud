@@ -1,30 +1,48 @@
 import { AddIcon } from '@chakra-ui/icons'
 import {
-  Box,
   Button,
-  Center,
-  Container,
   Flex,
   Heading,
   Skeleton,
   Stack,
   VStack,
 } from '@chakra-ui/react'
+import {
+  TPaginationDataPageBased,
+  TPaginationResult,
+} from '@premieroctet/next-crud'
 import { User } from '@prisma/client'
-import { GetServerSideProps, NextPage } from 'next'
 import { useRouter } from 'next/router'
-import React from 'react'
-import useSWR from 'swr'
+import React, { useMemo } from 'react'
+import { useInfiniteQuery } from 'react-query'
 import Layout from '../../components/Layout'
 import UserListItem from '../../components/users/UserListItem'
 
-interface IProps {
-  users: User[]
-}
-
-const Users: NextPage<IProps> = ({ users }) => {
+const Users = () => {
   const { push } = useRouter()
-  const { data, mutate } = useSWR<User[]>('/api/users', { initialData: users })
+  const { data, fetchNextPage, isFetching, hasNextPage, refetch } =
+    useInfiniteQuery<TPaginationResult<User>>(
+      'users',
+      async ({ pageParam = 1 }) => {
+        const data: TPaginationResult<User> = await fetch(
+          `/api/users?page=${pageParam}`
+        ).then((res) => res.json())
+
+        return data
+      },
+      {
+        getNextPageParam: (lastPage) => {
+          const pagination = lastPage.pagination as TPaginationDataPageBased
+          return pagination.page === pagination.pageCount
+            ? undefined
+            : pagination.page + 1
+        },
+      }
+    )
+
+  const allData = useMemo(() => {
+    return data?.pages.flatMap((page) => page.data)
+  }, [data])
 
   const onEditUser = (id: User['id']) => {
     push(`/users/${id}`)
@@ -34,7 +52,7 @@ const Users: NextPage<IProps> = ({ users }) => {
     await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${id}`, {
       method: 'DELETE',
     })
-    mutate(data?.filter((user) => user.id !== id))
+    refetch()
   }
 
   return (
@@ -64,7 +82,7 @@ const Users: NextPage<IProps> = ({ users }) => {
               <Skeleton height="20px" />
             </Stack>
           )}
-          {data?.map((user) => (
+          {allData?.map((user) => (
             <UserListItem
               key={user.id}
               {...user}
@@ -73,19 +91,16 @@ const Users: NextPage<IProps> = ({ users }) => {
             />
           ))}
         </VStack>
+        <Button
+          colorScheme="blue"
+          onClick={() => fetchNextPage()}
+          disabled={isFetching || !hasNextPage}
+        >
+          Load more
+        </Button>
       </VStack>
     </Layout>
   )
-}
-
-export const getServerSideProps: GetServerSideProps<IProps> = async () => {
-  const users = await fetch(`${process.env.API_URL}/users`).then((res) =>
-    res.json()
-  )
-
-  return {
-    props: { users },
-  }
 }
 
 export default Users

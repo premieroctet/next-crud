@@ -1,9 +1,7 @@
 import { Heading, useToast, VStack } from '@chakra-ui/react'
-import { User } from '@prisma/client'
 import { NextPage } from 'next'
 import { useRouter } from 'next/router'
 import React from 'react'
-import { mutate } from 'swr'
 import Layout from '../../components/Layout'
 import UserForm, { IFormValues } from '../../components/users/UserForm'
 
@@ -26,7 +24,6 @@ const UserCreate: NextPage = () => {
         duration: 2000,
       })
       replace('/users')
-      mutate('/api/users', undefined, true)
     } catch (e) {
       toast({
         status: 'error',

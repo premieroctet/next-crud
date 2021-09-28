@@ -1,9 +1,10 @@
 import { Heading, useToast, VStack } from '@chakra-ui/react'
+import { TPaginationResult } from '@premieroctet/next-crud'
 import { User } from '@prisma/client'
 import { GetServerSideProps, NextPage } from 'next'
 import { useRouter } from 'next/router'
 import React from 'react'
-import { mutate } from 'swr'
+import { InfiniteData, useQueryClient } from 'react-query'
 import Layout from '../../components/Layout'
 import UserForm, { IFormValues } from '../../components/users/UserForm'
 
@@ -14,23 +15,39 @@ interface IProps {
 const UserCreate: NextPage<IProps> = ({ user }) => {
   const toast = useToast()
   const { replace } = useRouter()
+  const queryClient = useQueryClient()
 
   const onSubmit = async (values: IFormValues) => {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${user.id}`, {
-        method: 'PUT',
-        body: JSON.stringify(values),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
+      const userData = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/users/${user.id}`,
+        {
+          method: 'PUT',
+          body: JSON.stringify(values),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      ).then((res) => res.json())
       toast({
         status: 'success',
         description: 'User successfully updated',
         duration: 2000,
       })
       replace('/users')
-      mutate('/api/users', undefined, true)
+      queryClient.setQueryData<
+        InfiniteData<TPaginationResult<User>> | undefined
+      >('users', (data) => {
+        const page = data?.pages.find((page) =>
+          page.data.some((userElem) => userElem.id === user.id)
+        )
+        if (page) {
+          const elemIdx = page.data.findIndex((data) => data.id === user.id)
+          page.data[elemIdx] = userData
+        }
+
+        return data
+      })
     } catch (e) {
       toast({
         status: 'error',
@@ -54,9 +71,9 @@ const UserCreate: NextPage<IProps> = ({ user }) => {
 }
 
 export const getServerSideProps: GetServerSideProps<IProps> = async (ctx) => {
-  const user = await fetch(
-    `${process.env.API_URL}/users/${ctx.query.id}`
-  ).then((res) => res.json())
+  const user = await fetch(`${process.env.API_URL}/users/${ctx.query.id}`).then(
+    (res) => res.json()
+  )
 
   return {
     props: { user },

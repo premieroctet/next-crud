@@ -1,8 +1,10 @@
 import { getMockReq, getMockRes } from '@jest-mock/express'
-import { RouteType } from '../src/types'
+import { RouteType, TPaginationOptions } from '../src/types'
 import {
+  applyPaginationOptions,
   executeMiddlewares,
   formatResourceId,
+  getPaginationOptions,
   getRouteType,
   GetRouteType,
   isPrimitive,
@@ -232,6 +234,34 @@ describe('Middlewares', () => {
     expect(fn1).toHaveBeenCalled()
     expect(fn2).toHaveBeenCalled()
   })
+
+  it('should run correctly an async middleware', async () => {
+    const fn1 = jest.fn(async (ctx, next) => {
+      await new Promise((resolve) => setTimeout(resolve, 200))
+      ctx.result = {
+        customKey: ctx.result,
+      }
+      next()
+    })
+    const fn2 = jest.fn()
+    const { res } = getMockRes()
+    const req = getMockReq({
+      url: '/api/foo/bar',
+      method: 'GET',
+    })
+
+    const result = {
+      data: 1,
+    }
+
+    await executeMiddlewares([fn1, fn2], { req, res, result })
+    expect(fn1).toHaveBeenCalled()
+    expect(fn2.mock.calls[0][0]).toEqual({
+      req,
+      res,
+      result: { customKey: result },
+    })
+  })
 })
 
 describe('Primitives', () => {
@@ -263,5 +293,50 @@ describe('Format resource', () => {
 
   it('should format a resource id from string to another string', () => {
     expect(formatResourceId('some-slug')).toBe('some-slug')
+  })
+})
+
+describe('Pagination options', () => {
+  it('should throw an error with non strictly positive page query param', () => {
+    expect(() =>
+      getPaginationOptions(
+        {
+          page: 0,
+        },
+        {
+          perPage: 30,
+        }
+      )
+    ).toThrow('page query must be a strictly positive number')
+  })
+
+  it('should return a number page based pagination options object with perPage based on limit', () => {
+    expect(
+      getPaginationOptions(
+        {
+          page: 1,
+          limit: 50,
+        },
+        {
+          perPage: 30,
+        }
+      )
+    ).toEqual<TPaginationOptions>({ page: 1, perPage: 50 })
+  })
+
+  it('should apply the page based pagination options in the query', () => {
+    const query = {}
+
+    const paginationOptions: TPaginationOptions = {
+      page: 1,
+      perPage: 10,
+    }
+
+    applyPaginationOptions(query, paginationOptions)
+
+    expect(query).toEqual({
+      skip: 0,
+      limit: 10,
+    })
   })
 })

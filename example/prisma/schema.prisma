@@ -7,16 +7,17 @@ datasource db {
 }
 
 model User {
-  id        Int @id @default(autoincrement())
-  username  String
-  posts     Post[]
+  id       Int    @id @default(autoincrement())
+  username String
+  posts    Post[]
 }
 
 model Post {
-  id      Int @id @default(autoincrement())
+  id      Int    @id @default(autoincrement())
   title   String
   content String
-  user    User
+  user    User   @relation(fields: [userId], references: [id])
+  userId  Int
 }
 
 generator client {

@@ -1,6 +1,7 @@
 // @ts-ignore
 import { NextApiHandler, NextApiRequest, NextApiResponse } from 'next'
 import { match } from 'path-to-regexp'
+import { IHandlerConfig } from '.'
 import {
   createHandler,
   deleteHandler,
@@ -11,7 +12,13 @@ import {
 import HttpError from './httpError'
 import { parseQuery } from './queryParser'
 import { IAdapter, IHandlerParams, RouteType, TMiddleware } from './types'
-import { getRouteType, formatResourceId as formatResourceIdUtil, GetRouteType } from './utils'
+import {
+  getRouteType,
+  formatResourceId as formatResourceIdUtil,
+  GetRouteType,
+  getPaginationOptions,
+  applyPaginationOptions,
+} from './utils'
 
 type TCallback<T extends any = undefined> = (
   req: NextApiRequest,
@@ -47,6 +54,13 @@ interface INextCrudOptions<T, Q> {
   only?: RouteType[]
   exclude?: RouteType[]
   customHandlers?: ICustomHandler<T, Q>[]
+  config?: IHandlerConfig
+}
+
+const defaultConfig: IHandlerConfig = {
+  pagination: {
+    perPage: 20,
+  },
 }
 
 function NextCrud<T, Q = any>({
@@ -60,6 +74,7 @@ function NextCrud<T, Q = any>({
   only = [],
   exclude = [],
   customHandlers = [],
+  config = defaultConfig,
 }: INextCrudOptions<T, Q>): NextApiHandler<T> {
   if (
     !adapter.create ||
@@ -67,7 +82,8 @@ function NextCrud<T, Q = any>({
     !adapter.getAll ||
     !adapter.getOne ||
     !adapter.parseQuery ||
-    !adapter.update
+    !adapter.update ||
+    !adapter.getPaginationData
   ) {
     throw new Error('missing method in adapter')
   }
@@ -111,6 +127,17 @@ function NextCrud<T, Q = any>({
 
       const parsedQuery = parseQuery(url.split('?')[1])
 
+      let isPaginated = false
+
+      if (routeType === RouteType.READ_ALL) {
+        const pagination = getPaginationOptions(parsedQuery, config.pagination)
+
+        if (pagination) {
+          isPaginated = true
+          applyPaginationOptions(parsedQuery, pagination)
+        }
+      }
+
       const params: IHandlerParams<T, Q> = {
         request: req,
         response: res,
@@ -131,9 +158,13 @@ function NextCrud<T, Q = any>({
                 resourceName,
               })
               break
-            case RouteType.READ_ALL:
-              await getAllHandler<T, Q>(params)
+            case RouteType.READ_ALL: {
+              await getAllHandler<T, Q>({
+                ...params,
+                paginated: isPaginated,
+              })
               break
+            }
             case RouteType.CREATE:
               await createHandler<T, Q>({ ...params, body })
               break

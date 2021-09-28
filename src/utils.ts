@@ -1,5 +1,12 @@
 import { match } from 'path-to-regexp'
-import { RouteType, TMiddleware, TMiddlewareContext } from './types'
+import {
+  RouteType,
+  TMiddleware,
+  TMiddlewareContext,
+  IPaginationConfig,
+  IParsedQueryParams,
+  TPaginationOptions,
+} from './types'
 
 interface GetRouteTypeParams {
   method: string
@@ -136,4 +143,30 @@ export const executeMiddlewares = async <T extends any>(
   }
 
   return runner(0)
+}
+
+export const getPaginationOptions = (
+  query: IParsedQueryParams,
+  paginationConfig: IPaginationConfig
+): TPaginationOptions | null => {
+  if (typeof query.page !== 'undefined') {
+    if (query.page <= 0) {
+      throw new Error('page query must be a strictly positive number')
+    }
+
+    return {
+      page: query.page,
+      perPage: query.limit || paginationConfig.perPage,
+    }
+  }
+
+  return null
+}
+
+export const applyPaginationOptions = (
+  query: IParsedQueryParams,
+  paginationOptions: TPaginationOptions
+) => {
+  query.skip = (paginationOptions.page - 1) * paginationOptions.perPage
+  query.limit = paginationOptions.perPage
 }
