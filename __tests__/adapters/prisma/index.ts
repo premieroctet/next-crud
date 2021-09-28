@@ -39,6 +39,30 @@ describe('Prisma interraction', () => {
     expect(res.send).toHaveBeenCalledWith(expectedResult)
   })
 
+  it('should get a page based paginated users list', async () => {
+    const { res } = getMockRes()
+    const req = getMockReq({
+      url: '/api/users?page=2&limit=2',
+      method: 'GET',
+    })
+
+    const expectedResult = await prisma.user.findMany({
+      skip: 2,
+      take: 2,
+    })
+
+    await handler(req, res)
+
+    expect(res.send).toHaveBeenCalledWith({
+      data: expectedResult,
+      pagination: {
+        total: 4,
+        pageCount: 2,
+        page: 2,
+      },
+    })
+  })
+
   it('should get the user with first id', async () => {
     const user = await prisma.user.findFirst()
 

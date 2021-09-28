@@ -1,0 +1,47 @@
+import Link from 'next/link'
+
+# Pagination
+
+Pagination can be achieved by passing down the `page` query param at least. It should be a strictly positive number.
+
+Example:
+
+`/api/users?page=10`
+
+## Adapter
+
+To make the pagination work with your adapter, it needs to implement the following method:
+
+```typescript
+getPaginationData(query: Q): Promise<TPaginationData>
+```
+
+where `query` is the result of the `parseQuery` function of your adapter. It needs to return a Promise with the following shape:
+
+```typescript
+type TPaginationDataPageBased = {
+  total: number // total number of elements in the dataset, independent of pages
+  pageCount: number // number of pages
+  page: number // current page
+}
+
+type TPaginationData = TPaginationDataPageBased
+```
+
+## Pages size
+
+There are two ways to set a page size :
+
+- pass a `limit` query param in the URL, eg: `/api/users?page=1&limit=10`
+- add a pagination config to the <Link href="/api-docs/options#pagination">NextCrud config</Link>
+
+---
+
+The result of a page request is the following:
+
+```typescript
+type TPaginationResult<T> = {
+  data: T[] // Page dataset
+  pagination: TPaginationData
+}
+```

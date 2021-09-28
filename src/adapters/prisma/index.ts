@@ -11,7 +11,7 @@ import {
   PrismaClientValidationError,
 } from '@prisma/client'
 import HttpError from '../../httpError'
-import { IAdapter, IParsedQueryParams } from '../../types'
+import { IAdapter, IParsedQueryParams, TPaginationData } from '../../types'
 import { IPrismaParsedQueryParams } from './types'
 import { parsePrismaCursor } from './utils/parseCursor'
 import { parsePrismaOrderBy } from './utils/parseOrderBy'
@@ -44,6 +44,21 @@ export default class PrismaAdapter<T>
     this.prismaDelegate = this.prismaClient[modelName]
     this.primaryKey = primaryKey
     this.manyRelations = manyRelations
+  }
+  async getPaginationData(
+    query: IPrismaParsedQueryParams
+  ): Promise<TPaginationData> {
+    // @ts-ignore
+    const total: number = await this.prismaDelegate.count({
+      where: query.where,
+      distinct: query.distinct,
+    })
+
+    return {
+      total,
+      pageCount: Math.ceil(total / query.take),
+      page: Math.ceil(query.skip / query.take) + 1,
+    }
   }
 
   handleError(err: Error) {
@@ -82,10 +97,10 @@ export default class PrismaAdapter<T>
     if (query.orderBy) {
       parsed.orderBy = parsePrismaOrderBy(query.orderBy)
     }
-    if (query.limit) {
+    if (typeof query.limit !== 'undefined') {
       parsed.take = query.limit
     }
-    if (query.skip) {
+    if (typeof query.skip !== 'undefined') {
       parsed.skip = query.skip
     }
     if (query.originalQuery?.cursor) {
@@ -98,8 +113,9 @@ export default class PrismaAdapter<T>
     return parsed
   }
 
-  async getAll(query?: IPrismaParsedQueryParams): Promise<T> {
-    const results = await this.prismaDelegate.findMany({
+  async getAll(query?: IPrismaParsedQueryParams): Promise<T[]> {
+    // @ts-ignore
+    const results: T[] = await this.prismaDelegate.findMany({
       select: query.select,
       include: query.include,
       where: query.where,

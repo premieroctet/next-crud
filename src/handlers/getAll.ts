@@ -1,7 +1,9 @@
-import { IHandlerParams } from '../types'
+import { IHandlerParams, TPaginationResult } from '../types'
 import { executeMiddlewares } from '../utils'
 
-interface IGetAllHandler<T, Q> extends IHandlerParams<T, Q> {}
+interface IGetAllHandler<T, Q> extends IHandlerParams<T, Q> {
+  paginated: boolean
+}
 
 async function getAllHandler<T, Q>({
   adapter,
@@ -9,11 +11,23 @@ async function getAllHandler<T, Q>({
   query,
   middlewares,
   request,
+  paginated,
 }: IGetAllHandler<T, Q>): Promise<void> {
   const resources = await adapter.getAll(query)
-  await executeMiddlewares(
+  let dataResponse: T[] | TPaginationResult<T> = resources
+  if (paginated) {
+    const paginationData = await adapter.getPaginationData(query)
+    dataResponse = {
+      data: resources,
+      pagination: paginationData,
+    }
+  }
+  await executeMiddlewares<T[] | TPaginationResult<T>>(
+    // @ts-ignore
     [
+      // @ts-ignore
       ...middlewares,
+      // @ts-ignore
       ({ result }) => {
         response.send(result)
       },
@@ -21,7 +35,7 @@ async function getAllHandler<T, Q>({
     {
       req: request,
       res: response,
-      result: resources,
+      result: dataResponse,
     }
   )
 }

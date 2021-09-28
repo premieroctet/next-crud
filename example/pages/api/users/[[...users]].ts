@@ -16,20 +16,6 @@ const handler = NextCrud({
   onError: (req, res, error) => {
     console.log('error during request', error)
   },
-  middlewares: [
-    (ctx, next) => {
-      console.log('first middleware', ctx.result)
-      ctx.result = {
-        // @ts-ignore
-        myCustomKey: ctx.result,
-      }
-      next()
-    },
-    (ctx, next) => {
-      console.log('second middleware', ctx.result)
-      next()
-    },
-  ],
   customHandlers: [
     {
       path: '/(.*)/users/custom',
@@ -40,6 +26,11 @@ const handler = NextCrud({
       },
     },
   ],
+  config: {
+    pagination: {
+      perPage: 2,
+    },
+  },
 })
 
 export default handler

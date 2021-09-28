@@ -63,3 +63,23 @@ interface ICustomHandler<T, Q> {
   methods?: string[] // request methods, defaults to ['GET']
 }
 ```
+
+#### config
+
+You can pass a config object with the following shape:
+
+```typescript
+interface IHandlerConfig {
+  pagination?: IPaginationConfig
+}
+```
+
+##### pagination
+
+The pagination config accepts the following shape:
+
+```typescript
+interface IPaginationConfig {
+  perPage: number // default number of elements to display on each page
+}
+```
