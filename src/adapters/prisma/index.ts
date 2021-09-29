@@ -9,7 +9,6 @@ import {
   PrismaClientKnownRequestError,
   // @ts-ignore
   PrismaClientValidationError,
-  Prisma,
 } from '@prisma/client'
 import HttpError from '../../httpError'
 import { IAdapter, IParsedQueryParams, TPaginationData } from '../../types'
@@ -74,10 +73,8 @@ export default class PrismaAdapter<
     this.primaryKey = primaryKey
     this.manyRelations = manyRelations
     this.models =
-      models || !!Prisma?.ModelName
-        ? (Object.values(Prisma?.ModelName) as M[])
-        : // @ts-ignore
-          (Object.keys(prismaClient._dmmf?.modelMap) as M[]) // Retrieve model names from dmmf for prisma v2
+      // @ts-ignore
+      models || (Object.keys(prismaClient._dmmf?.modelMap) as M[]) // Retrieve model names from dmmf for prisma v2
   }
   async getPaginationData(
     resourceName: M,
