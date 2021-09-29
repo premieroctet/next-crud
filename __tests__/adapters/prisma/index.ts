@@ -1,39 +1,36 @@
 import { getMockReq, getMockRes } from '@jest-mock/express'
 import NextCrud from '../../../src/handler'
 import PrismaAdapter from '../../../src/adapters/prisma'
-import { User } from '@prisma/client'
+import { User, Post, Prisma } from '@prisma/client'
 import prisma from './client'
 import { NextApiHandler } from 'next'
 import { createSeedData } from './seed'
-import { IPathsOptions } from '../../../src/types'
 
 describe('Prisma interraction', () => {
   beforeAll(async () => {
     await createSeedData()
   })
-  let adapter: PrismaAdapter<User>
-  let handler: NextApiHandler<User>
-
-  const generatePath = (
-    resourceName: string,
-    basePath: string
-  ): IPathsOptions => {
-    return {
-      resourceName,
-      basePath,
-    }
-  }
+  let adapter: PrismaAdapter<User | Post, Prisma.ModelName>
+  let handler: NextApiHandler<User | Post>
 
   beforeEach(() => {
-    adapter = new PrismaAdapter<User>({
-      modelName: 'user',
-      manyRelations: ['post.author', 'comment.post', 'comment.author'],
+    adapter = new PrismaAdapter<User | Post, Prisma.ModelName>({
       prismaClient: prisma,
+      manyRelations: {
+        [Prisma.ModelName.User]: [
+          'post.author',
+          'comment.post',
+          'comment.author',
+        ],
+      },
     })
-
     handler = NextCrud({
-      adapterFactory: () => adapter,
-      paths: [generatePath('users', '/api/users')],
+      adapter,
+      models: {
+        [Prisma.ModelName.User]: {
+          name: 'users',
+        },
+      },
     })
   })
 

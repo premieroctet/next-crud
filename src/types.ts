@@ -13,24 +13,15 @@ export interface IHandlerConfig {
   swagger?: TSwaggerConfig
 }
 
-export interface IPathsOptions {
-  /**
-   * Resource name of the path, eg: users
-   */
-  resourceName: string
-  /**
-   * Base path of the CRUD, eg: /api/users
-   */
-  basePath: string
-  /**
-   * Route types that should be catched
-   */
+export type TModelOption = {
+  name?: string
   only?: RouteType[]
-  /**
-   * Route types that should not be catched
-   */
   exclude?: RouteType[]
   formatResourceId?: (resourceId: string) => string | number
+}
+
+export type TModelsOptions<M extends string = string> = {
+  [key in M]?: TModelOption
 }
 
 export interface IHandlerParams<T, Q> {
@@ -39,6 +30,7 @@ export interface IHandlerParams<T, Q> {
   response: NextApiResponse
   query: Q
   middlewares: TMiddleware<T>[]
+  resourceName: string
 }
 
 export interface IUniqueResourceHandlerParams<T, Q>
@@ -47,17 +39,24 @@ export interface IUniqueResourceHandlerParams<T, Q>
   resourceName: string
 }
 
-export interface IAdapter<T, Q> {
-  parseQuery(query?: IParsedQueryParams): Q
-  getAll(query?: Q): Promise<T[]>
-  getOne(resourceId: string | number, query?: Q): Promise<T>
-  create(data: any, query?: Q): Promise<T>
-  update(resourceId: string | number, data: any, query?: Q): Promise<T>
-  delete(resourceId: string | number, query?: Q): Promise<T>
-  getPaginationData(query: Q): Promise<TPaginationData>
+export interface IAdapter<T, Q, M extends string = string> {
+  models: M[]
+  parseQuery(resourceName: M, query?: IParsedQueryParams): Q
+  getAll(resourceName: M, query?: Q): Promise<T[]>
+  getOne(resourceName: M, resourceId: string | number, query?: Q): Promise<T>
+  create(resourceName: M, data: any, query?: Q): Promise<T>
+  update(
+    resourceName: M,
+    resourceId: string | number,
+    data: any,
+    query?: Q
+  ): Promise<T>
+  delete(resourceName: M, resourceId: string | number, query?: Q): Promise<T>
+  getPaginationData(resourceName: M, query: Q): Promise<TPaginationData>
   connect?: () => Promise<void>
   disconnect?: () => Promise<void>
   handleError?: (err: Error) => void
+  getModels(): M[]
 }
 
 export type TMiddlewareContext<T> = {

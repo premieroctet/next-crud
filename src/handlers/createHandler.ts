@@ -12,8 +12,9 @@ async function createHandler<T, Q>({
   query,
   request,
   middlewares,
+  resourceName,
 }: ICreateHandler<T, Q>): Promise<void> {
-  const createdResource = await adapter.create(body, query)
+  const createdResource = await adapter.create(resourceName, body, query)
   await executeMiddlewares(
     [
       ...middlewares,

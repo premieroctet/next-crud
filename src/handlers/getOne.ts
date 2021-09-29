@@ -13,7 +13,7 @@ async function getOneHandler<T, Q>({
   middlewares,
   request,
 }: IGetOneHandler<T, Q>): Promise<void> {
-  const resource = await adapter.getOne(resourceId, query)
+  const resource = await adapter.getOne(resourceName, resourceId, query)
 
   if (!resource) {
     throw new HttpError(404, `${resourceName} ${resourceId} not found`)

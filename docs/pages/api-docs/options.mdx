@@ -4,30 +4,39 @@ import Link from 'next/link'
 
 The `NextCrud` function accepts one argument which is an object with the following keys
 
-#### paths
+#### models
 
-An array of CRUD paths to support. Each items should have the following shape:
+An object with the following shape:
 
 ```typescript
-interface IPathsOptions {
-  /**
-   * Resource name of the path, eg: users
-   */
-  resourceName: string
-  /**
-   * Base path of the CRUD, eg: /api/users
-   */
-  basePath: string
-  /**
-   * Route types that should be catched
-   */
-  only?: RouteType[]
-  /**
-   * Route types that should not be catched
-   */
-  exclude?: RouteType[]
+type TModelOption = {
+  name?: string
+  only?: RouteType[] // An array of routes to serve, by default it serves all possible routes
+  exclude?: RouteType[] // An array of routes to exclude from being served, by default no route is excluded
   formatResourceId?: (resourceId: string) => string | number
 }
+
+type TModelsOptions<M extends string = string> = {
+  [key in M]?: TModelOption
+}
+```
+
+Each key of the object must correspond to the models passed to your adapter, see <Link href="/adapters">this section</Link>.
+
+Example:
+
+```typescript
+NextCrud({
+  adapter: new PrismaAdapter<User | Post, Prisma.ModelName>({
+    prismaClient: myPrismaClient,
+  }),
+  models: {
+    [Prisma.ModelName.User]: {
+      name: 'users',
+      only: [RouteType.READ_ALL],
+    },
+  },
+})
 ```
 
 `only` and `exclude` can have the following values:
@@ -44,9 +53,9 @@ _TypeScript users: you can import the following enum and use it in the array_
 import { RouteType } from '@premieroctet/next-crud'
 ```
 
-#### adapterFactory
+#### adapter
 
-A required function that returns an instance of an adaptater class, see <Link href="/api-docs/adapters">this section</Link>. The function takes the matching path's resource name as a parameter.
+A required instance of an adaptater class, see <Link href="/api-docs/adapters">this section</Link>.
 
 #### formatResourceId
 
@@ -68,29 +77,7 @@ An optional function, see <Link href="/api-docs/callbacks">this section</Link>
 
 An optional array of functions, see <Link href="/api-docs/middlewares">this section</Link>
 
-#### customHandlers
-
-Sometimes you might want to add your own routes. This is possible thanks to the optional `customHandlers` property. It accepts an array of objects of the following shape:
-
-```typescript
-interface ICustomHandler<T, Q> {
-  path: string | RegExp | Array<string | RegExp> // path to match (e.g: /(.*)/users/:id)
-  handler: (params: ICustomHandlerParams<T, Q>) => void | Promise<void>
-  methods?: string[] // request methods, defaults to ['GET']
-}
-```
-
-#### config
-
-You can pass a config object with the following shape:
-
-```typescript
-interface IHandlerConfig {
-  pagination?: IPaginationConfig
-}
-```
-
-##### pagination
+#### pagination
 
 The pagination config accepts the following shape:
 

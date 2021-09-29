@@ -16,10 +16,15 @@ async function updateHandler<T, Q>({
   middlewares,
   request,
 }: IUpdateHandler<T, Q>): Promise<void> {
-  const resource = await adapter.getOne(resourceId, query)
+  const resource = await adapter.getOne(resourceName, resourceId, query)
 
   if (resource) {
-    const updatedResource = await adapter.update(resourceId, body, query)
+    const updatedResource = await adapter.update(
+      resourceName,
+      resourceId,
+      body,
+      query
+    )
     await executeMiddlewares(
       [
         ...middlewares,

@@ -6,7 +6,6 @@ import {
   IPaginationConfig,
   IParsedQueryParams,
   TPaginationOptions,
-  IPathsOptions,
 } from './types'
 
 interface GetRouteTypeParams {
@@ -172,10 +171,18 @@ export const applyPaginationOptions = (
   query.limit = paginationOptions.perPage
 }
 
-export const getPathDataFromUrl = (url: string, paths: IPathsOptions[]) => {
-  const matchingPath = paths.find((path) => {
-    return url.includes(path.basePath)
+export const ensureCamelCase = (str: string) => {
+  return `${str.charAt(0).toLowerCase()}${str.slice(1)}`
+}
+
+export const getResourceNameFromUrl = <M extends string = string>(
+  url: string,
+  models: M[]
+) => {
+  const splitUrl = url.split('?')[0]
+  const resourceName = models.find((model) => {
+    return splitUrl.includes(model) || splitUrl.includes(ensureCamelCase(model))
   })
 
-  return matchingPath
+  return resourceName
 }
