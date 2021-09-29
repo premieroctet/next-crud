@@ -1,12 +1,32 @@
-import { User } from '@prisma/client'
+import { PrismaClient, User } from '@prisma/client'
 import NextCrud, { PrismaAdapter } from '@premieroctet/next-crud'
+import { prisma } from '../../db'
 
-const handler = NextCrud({
-  resourceName: 'users',
-  adapter: new PrismaAdapter<User>({
+const resourceNameToModelMap: Record<
+  string,
+  { modelName: keyof PrismaClient; manyRelations: string[] }
+> = {
+  users: {
     modelName: 'user',
     manyRelations: ['posts'],
-  }),
+  },
+}
+
+const handler = NextCrud({
+  paths: [
+    {
+      resourceName: 'users',
+      basePath: '/api/users',
+    },
+  ],
+  adapterFactory: (resourceName) => {
+    const modelMap = resourceNameToModelMap[resourceName]
+    return new PrismaAdapter<User>({
+      modelName: modelMap.modelName,
+      manyRelations: modelMap.manyRelations,
+      prismaClient: prisma,
+    })
+  },
   onRequest: (req) => {
     console.log(`request occured on URL ${req.url}`)
   },

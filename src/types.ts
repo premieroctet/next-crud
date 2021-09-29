@@ -10,6 +10,27 @@ export enum RouteType {
 
 export interface IHandlerConfig {
   pagination?: IPaginationConfig
+  swagger?: TSwaggerConfig
+}
+
+export interface IPathsOptions {
+  /**
+   * Resource name of the path, eg: users
+   */
+  resourceName: string
+  /**
+   * Base path of the CRUD, eg: /api/users
+   */
+  basePath: string
+  /**
+   * Route types that should be catched
+   */
+  only?: RouteType[]
+  /**
+   * Route types that should not be catched
+   */
+  exclude?: RouteType[]
+  formatResourceId?: (resourceId: string) => string | number
 }
 
 export interface IHandlerParams<T, Q> {
@@ -128,4 +149,40 @@ export type TPaginationData = TPaginationDataPageBased
 export type TPaginationResult<T> = {
   data: T[]
   pagination: TPaginationData
+}
+
+export type TSwaggerType = {
+  name: string
+  type: () => any
+  isArray?: boolean
+  description?: string
+  required?: boolean
+}
+
+export type TSwaggerOperation = {
+  summary?: string
+  responses?: Record<number, any>
+  body?: TSwaggerType
+  response: TSwaggerType
+}
+
+export type TSwaggerConfig = {
+  enabled?: boolean
+  tag?: {
+    name?: string
+    description?: string
+    externalDocs?: {
+      description: string
+      url: string
+    }
+  }
+  type: TSwaggerType
+  routeTypes?: {
+    [RouteType.READ_ALL]?: TSwaggerOperation
+    [RouteType.READ_ONE]?: TSwaggerOperation
+    [RouteType.CREATE]?: TSwaggerOperation
+    [RouteType.UPDATE]?: TSwaggerOperation
+    [RouteType.DELETE]?: TSwaggerOperation
+  }
+  additionalQueryParams?: TSwaggerType[]
 }

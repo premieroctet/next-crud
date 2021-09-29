@@ -6,6 +6,11 @@ import Layout from '../components/Layout'
 const Home = () => {
   const { push } = useRouter()
 
+  const onCustomUserHandler = async () => {
+    const txt = await fetch('/api/users/custom').then((res) => res.text())
+    alert(txt)
+  }
+
   return (
     <Layout title="Home">
       <VStack spacing={6} flex={1}>
@@ -13,6 +18,9 @@ const Home = () => {
         <VStack spacing={4} w="100%" px={7}>
           <Button isFullWidth colorScheme="blue" onClick={() => push('/users')}>
             Users
+          </Button>
+          <Button isFullWidth colorScheme="red" onClick={onCustomUserHandler}>
+            Custom user handler
           </Button>
         </VStack>
       </VStack>

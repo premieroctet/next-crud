@@ -1,10 +1,11 @@
 import { getMockReq, getMockRes } from '@jest-mock/express'
-import { RouteType, TPaginationOptions } from '../src/types'
+import { IPathsOptions, RouteType, TPaginationOptions } from '../src/types'
 import {
   applyPaginationOptions,
   executeMiddlewares,
   formatResourceId,
   getPaginationOptions,
+  getPathDataFromUrl,
   getRouteType,
   GetRouteType,
   isPrimitive,
@@ -338,5 +339,16 @@ describe('Pagination options', () => {
       skip: 0,
       limit: 10,
     })
+  })
+
+  it('should get the correct matching path object', () => {
+    const pathOptions: IPathsOptions = {
+      resourceName: 'foo',
+      basePath: '/api/foo',
+    }
+
+    expect(getPathDataFromUrl('/api/foo/bar', [pathOptions])).toEqual(
+      pathOptions
+    )
   })
 })

@@ -6,6 +6,7 @@ import {
   IPaginationConfig,
   IParsedQueryParams,
   TPaginationOptions,
+  IPathsOptions,
 } from './types'
 
 interface GetRouteTypeParams {
@@ -169,4 +170,12 @@ export const applyPaginationOptions = (
 ) => {
   query.skip = (paginationOptions.page - 1) * paginationOptions.perPage
   query.limit = paginationOptions.perPage
+}
+
+export const getPathDataFromUrl = (url: string, paths: IPathsOptions[]) => {
+  const matchingPath = paths.find((path) => {
+    return url.includes(path.basePath)
+  })
+
+  return matchingPath
 }

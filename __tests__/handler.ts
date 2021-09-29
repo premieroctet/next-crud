@@ -4,6 +4,7 @@ import NextCrud from '../src/handler'
 import {
   IAdapter,
   IParsedQueryParams,
+  IPathsOptions,
   RouteType,
   TPaginationData,
 } from '../src/types'
@@ -66,11 +67,21 @@ const generateNoopAdapter = (methods: {
   return instance
 }
 
+const generatePath = (
+  resourceName: string,
+  basePath: string
+): IPathsOptions => {
+  return {
+    resourceName,
+    basePath,
+  }
+}
+
 describe('Handler', () => {
   it('should run the handler correctly', async () => {
     const handler = NextCrud({
-      adapter: new NoopAdapter(),
-      resourceName: 'foo',
+      paths: [generatePath('foo', '/foo')],
+      adapterFactory: () => new NoopAdapter(),
     })
     const { res } = getMockRes()
 
@@ -85,21 +96,46 @@ describe('Handler', () => {
   })
 
   it('should throw an error with an invalid adapter', async () => {
-    expect(() =>
-      NextCrud({
-        // @ts-expect-error
-        adapter: new InvalidAdapter(),
-        resourceName: 'foo',
-      })
-    ).toThrowError('missing method in adapter')
+    const handler = NextCrud({
+      paths: [generatePath('foo', '/foo')],
+      // @ts-expect-error
+      adapterFactory: () => new InvalidAdapter(),
+    })
+    const { res } = getMockRes()
+
+    await handler(
+      getMockReq({
+        url: '/foo',
+        method: 'GET',
+      }),
+      res
+    )
+    expect(res.status).toHaveBeenCalledWith(500)
+  })
+
+  it('should return a 404 error when no path matches', async () => {
+    const handler = NextCrud({
+      paths: [generatePath('foo', '/foo')],
+      adapterFactory: () => new NoopAdapter(),
+    })
+    const { res } = getMockRes()
+
+    await handler(
+      getMockReq({
+        url: '/bar',
+        method: 'GET',
+      }),
+      res
+    )
+    expect(res.status).toHaveBeenCalledWith(404)
   })
 
   it('should run onRequest', async () => {
     const onRequest = jest.fn()
 
     const handler = NextCrud({
-      adapter: new NoopAdapter(),
-      resourceName: 'foo',
+      paths: [generatePath('foo', '/foo')],
+      adapterFactory: () => new NoopAdapter(),
       onRequest,
     })
     const { res } = getMockRes()
@@ -111,6 +147,7 @@ describe('Handler', () => {
     await handler(req, res)
     expect(onRequest).toHaveBeenCalledWith(req, res, {
       routeType: RouteType.READ_ALL,
+      resourceName: 'foo',
     })
   })
 
@@ -118,8 +155,8 @@ describe('Handler', () => {
     const onSuccess = jest.fn()
 
     const handler = NextCrud({
-      adapter: new NoopAdapter(),
-      resourceName: 'foo',
+      paths: [generatePath('foo', '/foo')],
+      adapterFactory: () => new NoopAdapter(),
       onSuccess,
     })
     const { res } = getMockRes()
@@ -141,8 +178,8 @@ describe('Handler', () => {
     const onError = jest.fn()
 
     const handler = NextCrud({
-      adapter: new NoopAdapter(),
-      resourceName: 'foo',
+      paths: [generatePath('foo', '/api/foo')],
+      adapterFactory: () => new NoopAdapter(),
       onRequest,
       onError,
     })
@@ -166,8 +203,8 @@ describe('Handler', () => {
     const onError = jest.fn()
 
     const handler = NextCrud({
-      adapter: new NoopAdapter(),
-      resourceName: 'foo',
+      adapterFactory: () => new NoopAdapter(),
+      paths: [generatePath('foo', '/api/foo')],
       onRequest,
       onError,
     })
@@ -195,8 +232,8 @@ describe('Handler', () => {
     })
 
     const handler = NextCrud({
-      adapter,
-      resourceName: 'foo',
+      adapterFactory: () => adapter,
+      paths: [generatePath('foo', '/api/foo')],
     })
     const { res } = getMockRes()
     const req = getMockReq({
@@ -210,9 +247,8 @@ describe('Handler', () => {
 
   it('should trigger a 404 if we fetch a route not registered in the only option', async () => {
     const handler = NextCrud({
-      adapter: new NoopAdapter(),
-      resourceName: 'foo',
-      only: [RouteType.CREATE],
+      paths: [{ ...generatePath('foo', '/api/foo'), only: [RouteType.CREATE] }],
+      adapterFactory: () => new NoopAdapter(),
     })
     const { res } = getMockRes()
     const req = getMockReq({
@@ -226,9 +262,10 @@ describe('Handler', () => {
 
   it('should trigger a 404 if we fetch a route that is in the exclude option', async () => {
     const handler = NextCrud({
-      adapter: new NoopAdapter(),
-      resourceName: 'foo',
-      exclude: [RouteType.READ_ONE],
+      paths: [
+        { ...generatePath('foo', '/api/foo'), exclude: [RouteType.READ_ONE] },
+      ],
+      adapterFactory: () => new NoopAdapter(),
     })
     const { res } = getMockRes()
     const req = getMockReq({
@@ -244,9 +281,26 @@ describe('Handler', () => {
     const formatResourceId = jest.fn()
 
     const handler = NextCrud({
-      adapter: new NoopAdapter(),
-      resourceName: 'foo',
+      adapterFactory: () => new NoopAdapter(),
+      paths: [generatePath('foo', '/api/foo')],
       formatResourceId,
+    })
+    const { res } = getMockRes()
+    const req = getMockReq({
+      url: '/api/foo/bar',
+      method: 'GET',
+    })
+
+    await handler(req, res)
+    expect(formatResourceId).toHaveBeenCalledWith('bar')
+  })
+
+  it('should trigger the formatResourceId option from path config if provided', async () => {
+    const formatResourceId = jest.fn()
+
+    const handler = NextCrud({
+      adapterFactory: () => new NoopAdapter(),
+      paths: [{ ...generatePath('foo', '/api/foo'), formatResourceId }],
     })
     const { res } = getMockRes()
     const req = getMockReq({
@@ -263,8 +317,8 @@ describe('Handler', () => {
     const adapter = new NoopAdapter()
 
     const handler = NextCrud({
-      adapter,
-      resourceName: 'foo',
+      adapterFactory: () => adapter,
+      paths: [generatePath('foo', '/api/foo')],
       customHandlers: [
         {
           path: '/api/foo/:id',
@@ -279,7 +333,7 @@ describe('Handler', () => {
     })
 
     await handler(req, res)
-    expect(customHandler).toHaveBeenCalledWith({ req, res, adapter })
+    expect(customHandler).toHaveBeenCalledWith({ req, res })
   })
 
   it('should not trigger the provided customHandler with a non matching path', async () => {
@@ -287,8 +341,8 @@ describe('Handler', () => {
     const adapter = new NoopAdapter()
 
     const handler = NextCrud({
-      adapter,
-      resourceName: 'foo',
+      adapterFactory: () => adapter,
+      paths: [generatePath('foo', '/api/foo')],
       customHandlers: [
         {
           path: '/api/foo/id/:id',
@@ -311,8 +365,8 @@ describe('Handler', () => {
     const adapter = generateNoopAdapter({ parseQuery })
 
     const handler = NextCrud({
-      adapter,
-      resourceName: 'foo',
+      adapterFactory: () => adapter,
+      paths: [generatePath('foo', '/api/foo')],
     })
 
     const { res } = getMockRes()
@@ -331,8 +385,8 @@ describe('Handler', () => {
     const adapter = generateNoopAdapter({ connect, disconnect })
 
     const handler = NextCrud({
-      adapter,
-      resourceName: 'foo',
+      adapterFactory: () => adapter,
+      paths: [generatePath('foo', '/api/foo')],
     })
 
     const { res } = getMockRes()
@@ -352,8 +406,8 @@ describe('Handler', () => {
       const getOne = jest.fn(() => data)
       const adapter = generateNoopAdapter({ getOne })
       const handler = NextCrud({
-        adapter,
-        resourceName: 'foo',
+        adapterFactory: () => adapter,
+        paths: [generatePath('foo', '/api/foo')],
       })
 
       const { res } = getMockRes()
@@ -369,8 +423,8 @@ describe('Handler', () => {
       const getOne = jest.fn(() => null)
       const adapter = generateNoopAdapter({ getOne })
       const handler = NextCrud({
-        adapter,
-        resourceName: 'foo',
+        adapterFactory: () => adapter,
+        paths: [generatePath('foo', '/api/foo')],
       })
 
       const { res } = getMockRes()
@@ -392,8 +446,8 @@ describe('Handler', () => {
       const getAll = jest.fn(() => collection)
       const adapter = generateNoopAdapter({ getAll })
       const handler = NextCrud({
-        adapter,
-        resourceName: 'foo',
+        adapterFactory: () => adapter,
+        paths: [generatePath('foo', '/api/foo')],
       })
 
       const { res } = getMockRes()
@@ -412,8 +466,8 @@ describe('Handler', () => {
       const create = jest.fn(() => data)
       const adapter = generateNoopAdapter({ create })
       const handler = NextCrud({
-        adapter,
-        resourceName: 'foo',
+        adapterFactory: () => adapter,
+        paths: [generatePath('foo', '/api/foo')],
       })
 
       const { res } = getMockRes()
@@ -435,8 +489,8 @@ describe('Handler', () => {
       const update = jest.fn(() => ({ ...data, ...body }))
       const adapter = generateNoopAdapter({ getOne, update })
       const handler = NextCrud({
-        adapter,
-        resourceName: 'foo',
+        adapterFactory: () => adapter,
+        paths: [generatePath('foo', '/api/foo')],
       })
 
       const { res } = getMockRes()
@@ -455,8 +509,8 @@ describe('Handler', () => {
       const update = jest.fn(() => null)
       const adapter = generateNoopAdapter({ getOne, update })
       const handler = NextCrud({
-        adapter,
-        resourceName: 'foo',
+        adapterFactory: () => adapter,
+        paths: [generatePath('foo', '/api/foo')],
       })
 
       const { res } = getMockRes()
@@ -477,8 +531,8 @@ describe('Handler', () => {
       const deleteFn = jest.fn(() => data)
       const adapter = generateNoopAdapter({ getOne, delete: deleteFn })
       const handler = NextCrud({
-        adapter,
-        resourceName: 'foo',
+        adapterFactory: () => adapter,
+        paths: [generatePath('foo', '/api/foo')],
       })
 
       const { res } = getMockRes()
@@ -496,8 +550,8 @@ describe('Handler', () => {
       const deleteFn = jest.fn(() => null)
       const adapter = generateNoopAdapter({ getOne, delete: deleteFn })
       const handler = NextCrud({
-        adapter,
-        resourceName: 'foo',
+        adapterFactory: () => adapter,
+        paths: [generatePath('foo', '/api/foo')],
       })
 
       const { res } = getMockRes()
@@ -514,8 +568,8 @@ describe('Handler', () => {
   describe('Unknown method', () => {
     it('should return 404 upon unknown method', async () => {
       const handler = NextCrud({
-        adapter: new NoopAdapter(),
-        resourceName: 'foo',
+        adapterFactory: () => new NoopAdapter(),
+        paths: [generatePath('foo', '/api/foo')],
       })
 
       const { res } = getMockRes()
@@ -530,9 +584,8 @@ describe('Handler', () => {
 
     it('should return 404 upon unknwon method even if accessibleRoutes allows it', async () => {
       const handler = NextCrud({
-        adapter: new NoopAdapter(),
-        resourceName: 'foo',
-        only: [null],
+        adapterFactory: () => new NoopAdapter(),
+        paths: [{ ...generatePath('foo', '/api/foo'), only: [null] }],
       })
 
       const { res } = getMockRes()
@@ -547,14 +600,18 @@ describe('Handler', () => {
 
     it('should return 404 upon unknwon method even if its the only one not excluded', async () => {
       const handler = NextCrud({
-        adapter: new NoopAdapter(),
-        resourceName: 'foo',
-        exclude: [
-          RouteType.CREATE,
-          RouteType.DELETE,
-          RouteType.READ_ALL,
-          RouteType.READ_ONE,
-          RouteType.UPDATE,
+        adapterFactory: () => new NoopAdapter(),
+        paths: [
+          {
+            ...generatePath('foo', '/api/foo'),
+            exclude: [
+              RouteType.CREATE,
+              RouteType.DELETE,
+              RouteType.READ_ALL,
+              RouteType.READ_ONE,
+              RouteType.UPDATE,
+            ],
+          },
         ],
       })
 
@@ -584,8 +641,8 @@ describe('Handler', () => {
       const adapter = generateNoopAdapter({ getAll, getPaginationData })
 
       const handler = NextCrud({
-        adapter,
-        resourceName: 'foo',
+        adapterFactory: () => adapter,
+        paths: [generatePath('foo', '/api/foo')],
       })
 
       const { res } = getMockRes()

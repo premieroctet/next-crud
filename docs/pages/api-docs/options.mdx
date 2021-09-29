@@ -4,13 +4,49 @@ import Link from 'next/link'
 
 The `NextCrud` function accepts one argument which is an object with the following keys
 
-#### resourceName
+#### paths
 
-A required string that should match the folder name under which your file is located.
+An array of CRUD paths to support. Each items should have the following shape:
 
-#### adapter
+```typescript
+interface IPathsOptions {
+  /**
+   * Resource name of the path, eg: users
+   */
+  resourceName: string
+  /**
+   * Base path of the CRUD, eg: /api/users
+   */
+  basePath: string
+  /**
+   * Route types that should be catched
+   */
+  only?: RouteType[]
+  /**
+   * Route types that should not be catched
+   */
+  exclude?: RouteType[]
+  formatResourceId?: (resourceId: string) => string | number
+}
+```
 
-A required instance of an adaptater class, see <Link href="/api-docs/adapters">this section</Link>
+`only` and `exclude` can have the following values:
+
+- `CREATE`
+- `READ_ONE`
+- `READ_ALL`
+- `UPDATE`
+- `DELETE`
+
+_TypeScript users: you can import the following enum and use it in the array_
+
+```javascript
+import { RouteType } from '@premieroctet/next-crud'
+```
+
+#### adapterFactory
+
+A required function that returns an instance of an adaptater class, see <Link href="/api-docs/adapters">this section</Link>. The function takes the matching path's resource name as a parameter.
 
 #### formatResourceId
 
@@ -31,26 +67,6 @@ An optional function, see <Link href="/api-docs/callbacks">this section</Link>
 #### middlewares
 
 An optional array of functions, see <Link href="/api-docs/middlewares">this section</Link>
-
-#### only
-
-An optional array of strings, corresponding to the only routes that should be available. The strings must be one of the following:
-
-- `CREATE`
-- `READ_ONE`
-- `READ_ALL`
-- `UPDATE`
-- `DELETE`
-
-_TypeScript users: you can import the following enum and use it in the array_
-
-```javascript
-import { RouteType } from '@premieroctet/next-crud'
-```
-
-#### exclude
-
-Same as `only`, but defines the routes that should not be available and that will return a 404.
 
 #### customHandlers
 

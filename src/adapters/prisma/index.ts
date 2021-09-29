@@ -21,8 +21,8 @@ import { parsePrismaWhere } from './utils/parseWhere'
 interface IAdapterCtorArgs<T> {
   modelName: keyof PrismaClient
   primaryKey?: string
-  options?: PrismaClientOptions
   manyRelations?: string[]
+  prismaClient: PrismaClient
 }
 
 export default class PrismaAdapter<T>
@@ -36,10 +36,10 @@ export default class PrismaAdapter<T>
   constructor({
     modelName,
     primaryKey = 'id',
-    options,
+    prismaClient,
     manyRelations = [],
   }: IAdapterCtorArgs<T>) {
-    this.prismaClient = new PrismaClient(options)
+    this.prismaClient = prismaClient
     // @ts-ignore
     this.prismaDelegate = this.prismaClient[modelName]
     this.primaryKey = primaryKey

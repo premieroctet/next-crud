@@ -5,6 +5,7 @@ import { User } from '@prisma/client'
 import prisma from './client'
 import { NextApiHandler } from 'next'
 import { createSeedData } from './seed'
+import { IPathsOptions } from '../../../src/types'
 
 describe('Prisma interraction', () => {
   beforeAll(async () => {
@@ -13,15 +14,26 @@ describe('Prisma interraction', () => {
   let adapter: PrismaAdapter<User>
   let handler: NextApiHandler<User>
 
+  const generatePath = (
+    resourceName: string,
+    basePath: string
+  ): IPathsOptions => {
+    return {
+      resourceName,
+      basePath,
+    }
+  }
+
   beforeEach(() => {
     adapter = new PrismaAdapter<User>({
       modelName: 'user',
       manyRelations: ['post.author', 'comment.post', 'comment.author'],
+      prismaClient: prisma,
     })
 
     handler = NextCrud({
-      adapter,
-      resourceName: 'users',
+      adapterFactory: () => adapter,
+      paths: [generatePath('users', '/api/users')],
     })
   })
 
