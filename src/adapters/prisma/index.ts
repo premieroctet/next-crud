@@ -53,6 +53,7 @@ interface IAdapterCtorArgs<M extends string = string> {
 
 export default class PrismaAdapter<
   T,
+  // @ts-ignore
   M extends string = keyof Omit<PrismaClient, TIgnoredPrismaKeys>
 > implements IAdapter<T, IPrismaParsedQueryParams, M>
 {
