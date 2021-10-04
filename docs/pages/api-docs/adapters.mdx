@@ -29,6 +29,7 @@ export interface IAdapter<
   disconnect?: () => Promise<void> // disconnect function to your DB
   handleError?: (err: Error) => void // Used to throw a custom error of your own
   getModels(): M[]
+  getModelsJsonSchema?: () => any // JSON Schema of your models, used for Swagger
 }
 ```
 
@@ -123,11 +124,5 @@ A JSON object containing only 1 key and a matching value corresponding to an ent
 Example :
 
 ```
-
 /api/users?cursor={"id":1}
-
-```
-
-```
-
 ```

@@ -1,10 +1,19 @@
-import { User, Post } from '@prisma/client'
+import { User, Post, ModelName } from '@prisma/client'
 import NextCrud, { PrismaAdapter } from '@premieroctet/next-crud'
 import { prisma } from '../../db'
 
 const handler = NextCrud({
-  adapter: new PrismaAdapter<User | Post, 'users' | 'posts'>({
+  models: {
+    [ModelName.User]: {
+      name: 'users'
+    },
+    [ModelName.Post]: {
+      name: 'posts'
+    }
+  },
+  adapter: new PrismaAdapter<User | Post, ModelName>({
     prismaClient: prisma,
+    models: Object.keys(ModelName) as ModelName[],
   }),
   swagger: {
     enabled: true,
@@ -12,20 +21,14 @@ const handler = NextCrud({
     title: 'My API CRUD',
     apiUrl: process.env.API_URL as string,
     config: {
-      users: {
+      User: {
         tag: {
           name: 'Users',
         },
-        type: {
-          name: 'User',
-        },
       },
-      posts: {
+      Post: {
         tag: {
           name: 'Posts',
-        },
-        type: {
-          name: 'User',
         },
       },
     },
