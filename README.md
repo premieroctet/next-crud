@@ -24,15 +24,14 @@ model User {
 }
 ```
 
-Create the file `/pages/api/users/[[...users]].ts.` with:
+Create the file `/pages/api/[...nextcrud].ts.` with:
 
 ```javascript
 import NextCrud, { PrismaAdapter } from '@premieroctet/next-crud'
 
 const handler = NextCrud({
-  resourceName: 'users', // Same as your folder name
   adapter: new PrismaAdapter({
-    modelName: 'user', // Prisma model name, must match the one generated in your prisma client
+    prismaClient: myPrismaClientInstance,
   }),
 })
 
