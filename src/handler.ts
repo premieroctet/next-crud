@@ -1,6 +1,5 @@
 // @ts-ignore
 import { NextApiHandler, NextApiRequest, NextApiResponse } from 'next'
-import { IPaginationConfig, TModelsOptions } from '.'
 import {
   createHandler,
   deleteHandler,
@@ -10,7 +9,15 @@ import {
 } from './handlers'
 import HttpError from './httpError'
 import { parseQuery } from './queryParser'
-import { IAdapter, IHandlerParams, RouteType, TMiddleware } from './types'
+import {
+  IAdapter,
+  IHandlerParams,
+  RouteType,
+  TMiddleware,
+  IPaginationConfig,
+  TModelsOptions,
+  TSwaggerConfig,
+} from './types'
 import {
   getRouteType,
   formatResourceId as formatResourceIdUtil,
@@ -18,7 +25,13 @@ import {
   getPaginationOptions,
   applyPaginationOptions,
   getResourceNameFromUrl,
+  getAccessibleRoutes,
 } from './utils'
+import {
+  getModelsAccessibleRoutes,
+  getSwaggerPaths,
+  getSwaggerTags,
+} from './swagger/utils'
 
 type TCallback<T extends any = undefined> = (
   req: NextApiRequest,
@@ -40,10 +53,18 @@ interface INextCrudOptions<T, Q, M extends string = string> {
   middlewares?: TMiddleware<T>[]
   pagination?: IPaginationConfig
   models?: TModelsOptions<M>
+  swagger?: TSwaggerConfig<M>
 }
 
 const defaultPaginationConfig: IPaginationConfig = {
   perPage: 20,
+}
+
+const defaultSwaggerConfig: TSwaggerConfig<string> = {
+  enabled: process.env.NODE_ENV === 'development',
+  path: '/api/docs',
+  title: 'CRUD API',
+  apiUrl: '',
 }
 
 function NextCrud<T, Q = any, M extends string = string>({
@@ -55,29 +76,8 @@ function NextCrud<T, Q = any, M extends string = string>({
   onError,
   middlewares = [],
   pagination = defaultPaginationConfig,
+  swagger = defaultSwaggerConfig,
 }: INextCrudOptions<T, Q, M>): NextApiHandler<T> {
-  // if (config.swagger?.enabled) {
-  //   const swaggerRoutes = accessibleRoutes.reduce((acc, val) => {
-  //     if (config.swagger.routeTypes[val]) {
-  //       return {
-  //         ...acc,
-  //         [val]: config.swagger.routeTypes[val],
-  //       }
-  //     }
-
-  //     return acc
-  //   }, {})
-
-  //   generateSwaggerForModel({
-  //     tag: config.swagger.tag,
-  //     routes: swaggerRoutes,
-  //     type: config.swagger.type,
-  //     queryParams: [...config.swagger.additionalQueryParams],
-  //     enabledRoutes: accessibleRoutes,
-  //     resourceName,
-  //   })
-  // }
-
   if (
     !adapter.create ||
     !adapter.delete ||
@@ -90,13 +90,42 @@ function NextCrud<T, Q = any, M extends string = string>({
     throw new Error('missing method in adapter')
   }
 
+  let swaggerJson
+
+  if (swagger?.enabled) {
+    const swaggerRoutes = getModelsAccessibleRoutes(adapter.getModels(), models)
+    const swaggerTags = getSwaggerTags(adapter.getModels(), swagger.config)
+    const swaggerPaths = getSwaggerPaths(swaggerRoutes, swagger?.config, models)
+
+    swaggerJson = {
+      openapi: '3.0.1',
+      info: {
+        title: swagger.title,
+      },
+      servers: [{ url: swagger.apiUrl }],
+      tags: swaggerTags,
+      paths: swaggerPaths,
+    }
+
+    if (adapter.getModelsJsonSchema) {
+      swaggerJson.components = {
+        schemas: adapter.getModelsJsonSchema(),
+      }
+    }
+  }
+
   const handler: NextApiHandler = async (req, res) => {
     const { url, method, body } = req
+
+    if (url.includes(swagger.path) && swagger.enabled) {
+      res.status(200).json(swaggerJson)
+      return
+    }
 
     const modelNames = adapter.getModels().map((modelName) => {
       return models?.[modelName]?.name ?? modelName
     })
-    let resourceName = getResourceNameFromUrl(url, modelNames)
+    let resourceName = getResourceNameFromUrl(url, modelNames) as M
 
     if (!resourceName) {
       res.status(404)
@@ -111,33 +140,28 @@ function NextCrud<T, Q = any, M extends string = string>({
         resourceName,
       })
 
-      let accessibleRoutes: RouteType[] = [
-        RouteType.READ_ALL,
-        RouteType.READ_ONE,
-        RouteType.UPDATE,
-        RouteType.DELETE,
-        RouteType.CREATE,
-      ]
-
-      const modelConfig = models?.[resourceName]
-
-      if (modelConfig?.only?.length) {
-        accessibleRoutes = accessibleRoutes.filter((elem) => {
-          return modelConfig.only?.includes(elem)
-        })
-      }
-
-      if (modelConfig?.exclude?.length) {
-        accessibleRoutes = accessibleRoutes.filter((elem) => {
-          return !modelConfig?.exclude?.includes(elem)
-        })
-      }
-
       await onRequest?.(req, res, {
         routeType,
         resourceId,
         resourceName,
       })
+
+      // If resource name is part of the models config, we should revert it to the original model name
+      if (models) {
+        const originalModel = Object.keys(models).find(
+          (model) => models[model]?.name === resourceName
+        )
+        if (originalModel) {
+          resourceName = originalModel as M
+        }
+      }
+
+      const modelConfig = models?.[resourceName]
+
+      const accessibleRoutes = getAccessibleRoutes(
+        modelConfig?.only,
+        modelConfig?.exclude
+      )
 
       if (!accessibleRoutes.includes(routeType)) {
         res.status(404).end()
@@ -154,16 +178,6 @@ function NextCrud<T, Q = any, M extends string = string>({
         if (paginationOptions) {
           isPaginated = true
           applyPaginationOptions(parsedQuery, paginationOptions)
-        }
-      }
-
-      // If resource name is part of the models config, we should revert it to the original model name
-      if (models) {
-        const originalModel = Object.keys(models).find(
-          (model) => models[model]?.name === resourceName
-        )
-        if (originalModel) {
-          resourceName = originalModel
         }
       }
 

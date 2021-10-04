@@ -8,11 +8,6 @@ export enum RouteType {
   DELETE = 'DELETE',
 }
 
-export interface IHandlerConfig {
-  pagination?: IPaginationConfig
-  swagger?: TSwaggerConfig
-}
-
 export type TModelOption = {
   name?: string
   only?: RouteType[]
@@ -57,6 +52,7 @@ export interface IAdapter<T, Q, M extends string = string> {
   disconnect?: () => Promise<void>
   handleError?: (err: Error) => void
   getModels(): M[]
+  getModelsJsonSchema?: () => any
 }
 
 export type TMiddlewareContext<T> = {
@@ -152,7 +148,6 @@ export type TPaginationResult<T> = {
 
 export type TSwaggerType = {
   name: string
-  type: () => any
   isArray?: boolean
   description?: string
   required?: boolean
@@ -165,23 +160,42 @@ export type TSwaggerOperation = {
   response: TSwaggerType
 }
 
-export type TSwaggerConfig = {
-  enabled?: boolean
-  tag?: {
-    name?: string
-    description?: string
-    externalDocs?: {
-      description: string
-      url: string
+export type TSwaggerTag = {
+  name?: string
+  description?: string
+  externalDocs?: {
+    description: string
+    url: string
+  }
+}
+
+export type TSwaggerParameter = {
+  name: string
+  description?: string
+  schema: {
+    type: string
+  } & any
+}
+
+export type TSwaggerModelsConfig<M extends string> = {
+  [key in M]?: {
+    tag: TSwaggerTag
+    type?: TSwaggerType
+    routeTypes?: {
+      [RouteType.READ_ALL]?: TSwaggerOperation
+      [RouteType.READ_ONE]?: TSwaggerOperation
+      [RouteType.CREATE]?: TSwaggerOperation
+      [RouteType.UPDATE]?: TSwaggerOperation
+      [RouteType.DELETE]?: TSwaggerOperation
     }
+    additionalQueryParams?: TSwaggerParameter[]
   }
-  type: TSwaggerType
-  routeTypes?: {
-    [RouteType.READ_ALL]?: TSwaggerOperation
-    [RouteType.READ_ONE]?: TSwaggerOperation
-    [RouteType.CREATE]?: TSwaggerOperation
-    [RouteType.UPDATE]?: TSwaggerOperation
-    [RouteType.DELETE]?: TSwaggerOperation
-  }
-  additionalQueryParams?: TSwaggerType[]
+}
+
+export type TSwaggerConfig<M extends string> = {
+  title?: string
+  enabled?: boolean
+  path?: string
+  apiUrl: string
+  config?: TSwaggerModelsConfig<M>
 }

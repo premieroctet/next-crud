@@ -1,27 +1,34 @@
-import { User, Post, ModelName } from '@prisma/client'
+import { User, Post } from '@prisma/client'
 import NextCrud, { PrismaAdapter } from '@premieroctet/next-crud'
 import { prisma } from '../../db'
 
 const handler = NextCrud({
-  models: {
-    [ModelName.User]: {
-      name: 'users',
-    },
-  },
-  adapter: new PrismaAdapter<User | Post, ModelName>({
+  adapter: new PrismaAdapter<User | Post, 'users' | 'posts'>({
     prismaClient: prisma,
   }),
-  onRequest: (req) => {
-    console.log(`request occured on URL ${req.url}`)
-  },
-  onSuccess: (req, res) => {
-    console.log('request successful')
-  },
-  onError: (req, res, error) => {
-    console.log('error during request', error)
-  },
-  pagination: {
-    perPage: 2,
+  swagger: {
+    enabled: true,
+    path: '/api/docs',
+    title: 'My API CRUD',
+    apiUrl: process.env.API_URL as string,
+    config: {
+      users: {
+        tag: {
+          name: 'Users',
+        },
+        type: {
+          name: 'User',
+        },
+      },
+      posts: {
+        tag: {
+          name: 'Posts',
+        },
+        type: {
+          name: 'User',
+        },
+      },
+    },
   },
 })
 

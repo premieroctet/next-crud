@@ -4,12 +4,12 @@ import {
   // @ts-ignore
   PrismaAction,
   // @ts-ignore
-  PrismaClientOptions,
-  // @ts-ignore
   PrismaClientKnownRequestError,
   // @ts-ignore
   PrismaClientValidationError,
 } from '@prisma/client'
+import { transformDMMF } from 'prisma-json-schema-generator/dist/generator/transformDMMF'
+import { getJSONSchemaProperty } from 'prisma-json-schema-generator/dist/generator/properties'
 import HttpError from '../../httpError'
 import { IAdapter, IParsedQueryParams, TPaginationData } from '../../types'
 import { IPrismaParsedQueryParams } from './types'
@@ -17,6 +17,7 @@ import { parsePrismaCursor } from './utils/parseCursor'
 import { parsePrismaOrderBy } from './utils/parseOrderBy'
 import { parsePrismaRecursiveField } from './utils/parseRecursive'
 import { parsePrismaWhere } from './utils/parseWhere'
+import PrismaJsonSchemaParser from './jsonSchemaParser'
 
 // Keys that should not be given to the models array
 type TIgnoredPrismaKeys =
@@ -63,6 +64,7 @@ export default class PrismaAdapter<
   }
   private prismaClient: PrismaClient
   models: M[]
+  private prismaJsonSchemaParser: PrismaJsonSchemaParser
 
   constructor({
     primaryKey = 'id',
@@ -73,9 +75,16 @@ export default class PrismaAdapter<
     this.prismaClient = prismaClient
     this.primaryKey = primaryKey
     this.manyRelations = manyRelations
+    // @ts-ignore
+    const prismaDmmfModels = prismaClient._dmmf?.mappingsMap
     this.models =
       // @ts-ignore
-      models || (Object.keys(prismaClient._dmmf?.modelMap) as M[]) // Retrieve model names from dmmf for prisma v2
+      models ||
+      // @ts-ignore
+      (Object.keys(prismaDmmfModels).map(
+        (modelName) => prismaDmmfModels[modelName].plural
+      ) as M[]) // Retrieve model names from dmmf for prisma v2
+    this.prismaJsonSchemaParser = new PrismaJsonSchemaParser(this.prismaClient)
   }
   async getPaginationData(
     resourceName: M,
@@ -250,6 +259,22 @@ export default class PrismaAdapter<
 
   getModels() {
     return this.models
+  }
+
+  getModelsJsonSchema() {
+    // @ts-ignore
+    const definitions = this.prismaJsonSchemaParser.parseModels()
+    const models = Object.keys(definitions)
+    const inputs = this.prismaJsonSchemaParser.parseInputTypes(models)
+    const schema = JSON.stringify({
+      ...definitions,
+      ...inputs,
+      ...this.prismaJsonSchemaParser.getPaginationDataSchema(),
+      ...this.prismaJsonSchemaParser.getPaginatedModelsSchemas(models),
+    })
+    const defs = schema.replace(/#\/definitions/g, '#/components/schemas')
+
+    return JSON.parse(defs)
   }
 
   private getPrismaDelegate(
