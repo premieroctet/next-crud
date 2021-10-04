@@ -170,3 +170,46 @@ export const applyPaginationOptions = (
   query.skip = (paginationOptions.page - 1) * paginationOptions.perPage
   query.limit = paginationOptions.perPage
 }
+
+export const ensureCamelCase = (str: string) => {
+  return `${str.charAt(0).toLowerCase()}${str.slice(1)}`
+}
+
+export const getResourceNameFromUrl = <M extends string = string>(
+  url: string,
+  models: M[]
+) => {
+  const splitUrl = url.split('?')[0]
+  const resourceName = models.find((model) => {
+    return splitUrl.includes(model) || splitUrl.includes(ensureCamelCase(model))
+  })
+
+  return resourceName
+}
+
+export const getAccessibleRoutes = (
+  only?: RouteType[],
+  exclude?: RouteType[]
+): RouteType[] => {
+  let accessibleRoutes: RouteType[] = [
+    RouteType.READ_ALL,
+    RouteType.READ_ONE,
+    RouteType.UPDATE,
+    RouteType.DELETE,
+    RouteType.CREATE,
+  ]
+
+  if (only?.length) {
+    accessibleRoutes = accessibleRoutes.filter((elem) => {
+      return only?.includes(elem)
+    })
+  }
+
+  if (exclude?.length) {
+    accessibleRoutes = accessibleRoutes.filter((elem) => {
+      return !exclude?.includes(elem)
+    })
+  }
+
+  return accessibleRoutes
+}

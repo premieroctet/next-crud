@@ -9,8 +9,15 @@ import {
 } from '../src/types'
 import HttpError from '../src/httpError'
 
-class NoopAdapter implements IAdapter<unknown, unknown> {
+class NoopAdapter implements IAdapter<unknown, unknown, string> {
+  models = []
+
+  constructor(models: string[] = []) {
+    this.models = models
+  }
+
   async getPaginationData(
+    resourceName: string,
     query: unknown,
     lastElement?: unknown
   ): Promise<TPaginationData> {
@@ -20,44 +27,64 @@ class NoopAdapter implements IAdapter<unknown, unknown> {
       page: 1,
     }
   }
-  parseQuery(query?: IParsedQueryParams): unknown {
+  parseQuery(resourceName: string, query?: IParsedQueryParams): unknown {
     return {}
   }
-  async getAll(query?: unknown): Promise<unknown[]> {
+  async getAll(resourceName: string, query?: unknown): Promise<unknown[]> {
     return []
   }
-  async getOne(resourceId: string | number, query?: unknown): Promise<unknown> {
+  async getOne(
+    resourceName: string,
+    resourceId: string | number,
+    query?: unknown
+  ): Promise<unknown> {
     return {}
   }
-  async create(data: any, query?: unknown): Promise<unknown> {
+  async create(
+    resourceName: string,
+    data: any,
+    query?: unknown
+  ): Promise<unknown> {
     return {}
   }
   async update(
+    resourceName: string,
     resourceId: string | number,
     data: any,
     query?: unknown
   ): Promise<unknown> {
     return {}
   }
-  async delete(resourceId: string | number, query?: unknown): Promise<unknown> {
+  async delete(
+    resourceName: string,
+    resourceId: string | number,
+    query?: unknown
+  ): Promise<unknown> {
     return {}
   }
 
   async handleError() {
     return {}
   }
+
+  getModels() {
+    return this.models
+  }
 }
 
 class InvalidAdapter {}
 
-const generateNoopAdapter = (methods: {
-  [name in keyof IAdapter<unknown, unknown>]?: (...args: any[]) => any
-}) => {
+const generateNoopAdapter = (
+  methods: {
+    [name in keyof IAdapter<unknown, unknown>]?: (...args: any[]) => any
+  },
+  models: string[] = []
+) => {
   class NoopAdapterExtension
     extends NoopAdapter
     implements IAdapter<unknown, unknown> {}
 
-  const instance = new NoopAdapterExtension()
+  const instance = new NoopAdapterExtension(models)
 
   Object.keys(methods).forEach((key) => {
     instance[key] = methods[key]
@@ -69,8 +96,7 @@ const generateNoopAdapter = (methods: {
 describe('Handler', () => {
   it('should run the handler correctly', async () => {
     const handler = NextCrud({
-      adapter: new NoopAdapter(),
-      resourceName: 'foo',
+      adapter: new NoopAdapter(['foo']),
     })
     const { res } = getMockRes()
 
@@ -87,19 +113,33 @@ describe('Handler', () => {
   it('should throw an error with an invalid adapter', async () => {
     expect(() =>
       NextCrud({
-        // @ts-expect-error
+        // @ts-ignore
         adapter: new InvalidAdapter(),
-        resourceName: 'foo',
       })
-    ).toThrowError('missing method in adapter')
+    ).toThrowError()
+  })
+
+  it('should return a 404 error when no path matches', async () => {
+    const handler = NextCrud({
+      adapter: new NoopAdapter(),
+    })
+    const { res } = getMockRes()
+
+    await handler(
+      getMockReq({
+        url: '/bar',
+        method: 'GET',
+      }),
+      res
+    )
+    expect(res.status).toHaveBeenCalledWith(404)
   })
 
   it('should run onRequest', async () => {
     const onRequest = jest.fn()
 
     const handler = NextCrud({
-      adapter: new NoopAdapter(),
-      resourceName: 'foo',
+      adapter: new NoopAdapter(['foo']),
       onRequest,
     })
     const { res } = getMockRes()
@@ -111,6 +151,7 @@ describe('Handler', () => {
     await handler(req, res)
     expect(onRequest).toHaveBeenCalledWith(req, res, {
       routeType: RouteType.READ_ALL,
+      resourceName: 'foo',
     })
   })
 
@@ -118,8 +159,7 @@ describe('Handler', () => {
     const onSuccess = jest.fn()
 
     const handler = NextCrud({
-      adapter: new NoopAdapter(),
-      resourceName: 'foo',
+      adapter: new NoopAdapter(['foo']),
       onSuccess,
     })
     const { res } = getMockRes()
@@ -141,8 +181,7 @@ describe('Handler', () => {
     const onError = jest.fn()
 
     const handler = NextCrud({
-      adapter: new NoopAdapter(),
-      resourceName: 'foo',
+      adapter: new NoopAdapter(['foo']),
       onRequest,
       onError,
     })
@@ -166,8 +205,7 @@ describe('Handler', () => {
     const onError = jest.fn()
 
     const handler = NextCrud({
-      adapter: new NoopAdapter(),
-      resourceName: 'foo',
+      adapter: new NoopAdapter(['foo']),
       onRequest,
       onError,
     })
@@ -189,14 +227,16 @@ describe('Handler', () => {
       throw error
     })
     const handleError = jest.fn()
-    const adapter = generateNoopAdapter({
-      getOne,
-      handleError,
-    })
+    const adapter = generateNoopAdapter(
+      {
+        getOne,
+        handleError,
+      },
+      ['foo']
+    )
 
     const handler = NextCrud({
       adapter,
-      resourceName: 'foo',
     })
     const { res } = getMockRes()
     const req = getMockReq({
@@ -210,9 +250,12 @@ describe('Handler', () => {
 
   it('should trigger a 404 if we fetch a route not registered in the only option', async () => {
     const handler = NextCrud({
-      adapter: new NoopAdapter(),
-      resourceName: 'foo',
-      only: [RouteType.CREATE],
+      adapter: new NoopAdapter(['foo']),
+      models: {
+        foo: {
+          only: [RouteType.READ_ALL],
+        },
+      },
     })
     const { res } = getMockRes()
     const req = getMockReq({
@@ -226,9 +269,12 @@ describe('Handler', () => {
 
   it('should trigger a 404 if we fetch a route that is in the exclude option', async () => {
     const handler = NextCrud({
-      adapter: new NoopAdapter(),
-      resourceName: 'foo',
-      exclude: [RouteType.READ_ONE],
+      adapter: new NoopAdapter(['foo']),
+      models: {
+        foo: {
+          exclude: [RouteType.READ_ONE],
+        },
+      },
     })
     const { res } = getMockRes()
     const req = getMockReq({
@@ -244,8 +290,7 @@ describe('Handler', () => {
     const formatResourceId = jest.fn()
 
     const handler = NextCrud({
-      adapter: new NoopAdapter(),
-      resourceName: 'foo',
+      adapter: new NoopAdapter(['foo']),
       formatResourceId,
     })
     const { res } = getMockRes()
@@ -258,19 +303,16 @@ describe('Handler', () => {
     expect(formatResourceId).toHaveBeenCalledWith('bar')
   })
 
-  it('should trigger the customHandler option if provided', async () => {
-    const customHandler = jest.fn()
-    const adapter = new NoopAdapter()
+  it('should trigger the formatResourceId option from path config if provided', async () => {
+    const formatResourceId = jest.fn()
 
     const handler = NextCrud({
-      adapter,
-      resourceName: 'foo',
-      customHandlers: [
-        {
-          path: '/api/foo/:id',
-          handler: customHandler,
+      adapter: new NoopAdapter(['foo']),
+      models: {
+        foo: {
+          formatResourceId,
         },
-      ],
+      },
     })
     const { res } = getMockRes()
     const req = getMockReq({
@@ -279,40 +321,15 @@ describe('Handler', () => {
     })
 
     await handler(req, res)
-    expect(customHandler).toHaveBeenCalledWith({ req, res, adapter })
-  })
-
-  it('should not trigger the provided customHandler with a non matching path', async () => {
-    const customHandler = jest.fn()
-    const adapter = new NoopAdapter()
-
-    const handler = NextCrud({
-      adapter,
-      resourceName: 'foo',
-      customHandlers: [
-        {
-          path: '/api/foo/id/:id',
-          handler: customHandler,
-        },
-      ],
-    })
-    const { res } = getMockRes()
-    const req = getMockReq({
-      url: '/api/foo/bar',
-      method: 'GET',
-    })
-
-    await handler(req, res)
-    expect(customHandler).not.toHaveBeenCalled()
+    expect(formatResourceId).toHaveBeenCalledWith('bar')
   })
 
   it('should run the adapter parseQuery function', async () => {
     const parseQuery = jest.fn()
-    const adapter = generateNoopAdapter({ parseQuery })
+    const adapter = generateNoopAdapter({ parseQuery }, ['foo'])
 
     const handler = NextCrud({
       adapter,
-      resourceName: 'foo',
     })
 
     const { res } = getMockRes()
@@ -322,17 +339,18 @@ describe('Handler', () => {
     })
 
     await handler(req, res)
-    expect(parseQuery).toHaveBeenCalledWith({ originalQuery: { foo: 'bar' } })
+    expect(parseQuery).toHaveBeenCalledWith('foo', {
+      originalQuery: { foo: 'bar' },
+    })
   })
 
   it('should run the adapter connect and disconnect functions', async () => {
     const connect = jest.fn()
     const disconnect = jest.fn()
-    const adapter = generateNoopAdapter({ connect, disconnect })
+    const adapter = generateNoopAdapter({ connect, disconnect }, ['foo'])
 
     const handler = NextCrud({
       adapter,
-      resourceName: 'foo',
     })
 
     const { res } = getMockRes()
@@ -350,10 +368,9 @@ describe('Handler', () => {
     it('should read one resource correctly', async () => {
       const data = { foo: 'bar' }
       const getOne = jest.fn(() => data)
-      const adapter = generateNoopAdapter({ getOne })
+      const adapter = generateNoopAdapter({ getOne }, ['foo'])
       const handler = NextCrud({
         adapter,
-        resourceName: 'foo',
       })
 
       const { res } = getMockRes()
@@ -367,10 +384,9 @@ describe('Handler', () => {
 
     it('should throw a 404 for a non existing resource', async () => {
       const getOne = jest.fn(() => null)
-      const adapter = generateNoopAdapter({ getOne })
+      const adapter = generateNoopAdapter({ getOne }, ['foo'])
       const handler = NextCrud({
         adapter,
-        resourceName: 'foo',
       })
 
       const { res } = getMockRes()
@@ -390,10 +406,9 @@ describe('Handler', () => {
     it('should read a collection of resources', async () => {
       const collection = [{ id: 1 }, { id: 2 }]
       const getAll = jest.fn(() => collection)
-      const adapter = generateNoopAdapter({ getAll })
+      const adapter = generateNoopAdapter({ getAll }, ['foo'])
       const handler = NextCrud({
         adapter,
-        resourceName: 'foo',
       })
 
       const { res } = getMockRes()
@@ -410,10 +425,9 @@ describe('Handler', () => {
     it('should return a 201 status code upon a resource creation', async () => {
       const data = { foo: 'bar' }
       const create = jest.fn(() => data)
-      const adapter = generateNoopAdapter({ create })
+      const adapter = generateNoopAdapter({ create }, ['foo'])
       const handler = NextCrud({
         adapter,
-        resourceName: 'foo',
       })
 
       const { res } = getMockRes()
@@ -433,10 +447,9 @@ describe('Handler', () => {
       const body = { foo: 'bar' }
       const getOne = jest.fn(() => data)
       const update = jest.fn(() => ({ ...data, ...body }))
-      const adapter = generateNoopAdapter({ getOne, update })
+      const adapter = generateNoopAdapter({ getOne, update }, ['foo'])
       const handler = NextCrud({
         adapter,
-        resourceName: 'foo',
       })
 
       const { res } = getMockRes()
@@ -447,16 +460,15 @@ describe('Handler', () => {
       })
       await handler(req, res)
       expect(res.send).toHaveBeenCalledWith({ ...data, ...body })
-      expect(update).toHaveBeenCalledWith('bar', body, {})
+      expect(update).toHaveBeenCalledWith('foo', 'bar', body, {})
     })
 
     it('should throw a 404 when updating a non existing resource', async () => {
       const getOne = jest.fn(() => null)
       const update = jest.fn(() => null)
-      const adapter = generateNoopAdapter({ getOne, update })
+      const adapter = generateNoopAdapter({ getOne, update }, ['foo'])
       const handler = NextCrud({
         adapter,
-        resourceName: 'foo',
       })
 
       const { res } = getMockRes()
@@ -475,10 +487,9 @@ describe('Handler', () => {
       const data = { id: 1 }
       const getOne = jest.fn(() => data)
       const deleteFn = jest.fn(() => data)
-      const adapter = generateNoopAdapter({ getOne, delete: deleteFn })
+      const adapter = generateNoopAdapter({ getOne, delete: deleteFn }, ['foo'])
       const handler = NextCrud({
         adapter,
-        resourceName: 'foo',
       })
 
       const { res } = getMockRes()
@@ -488,16 +499,15 @@ describe('Handler', () => {
       })
       await handler(req, res)
       expect(res.send).toHaveBeenCalledWith(data)
-      expect(deleteFn).toHaveBeenCalledWith('bar', {})
+      expect(deleteFn).toHaveBeenCalledWith('foo', 'bar', {})
     })
 
     it('should throw a 404 when deleting a non existing resource', async () => {
       const getOne = jest.fn(() => null)
       const deleteFn = jest.fn(() => null)
-      const adapter = generateNoopAdapter({ getOne, delete: deleteFn })
+      const adapter = generateNoopAdapter({ getOne, delete: deleteFn }, ['foo'])
       const handler = NextCrud({
         adapter,
-        resourceName: 'foo',
       })
 
       const { res } = getMockRes()
@@ -514,8 +524,7 @@ describe('Handler', () => {
   describe('Unknown method', () => {
     it('should return 404 upon unknown method', async () => {
       const handler = NextCrud({
-        adapter: new NoopAdapter(),
-        resourceName: 'foo',
+        adapter: new NoopAdapter(['foo']),
       })
 
       const { res } = getMockRes()
@@ -531,8 +540,11 @@ describe('Handler', () => {
     it('should return 404 upon unknwon method even if accessibleRoutes allows it', async () => {
       const handler = NextCrud({
         adapter: new NoopAdapter(),
-        resourceName: 'foo',
-        only: [null],
+        models: {
+          foo: {
+            only: [null],
+          },
+        },
       })
 
       const { res } = getMockRes()
@@ -548,14 +560,17 @@ describe('Handler', () => {
     it('should return 404 upon unknwon method even if its the only one not excluded', async () => {
       const handler = NextCrud({
         adapter: new NoopAdapter(),
-        resourceName: 'foo',
-        exclude: [
-          RouteType.CREATE,
-          RouteType.DELETE,
-          RouteType.READ_ALL,
-          RouteType.READ_ONE,
-          RouteType.UPDATE,
-        ],
+        models: {
+          foo: {
+            exclude: [
+              RouteType.CREATE,
+              RouteType.DELETE,
+              RouteType.READ_ALL,
+              RouteType.READ_ONE,
+              RouteType.UPDATE,
+            ],
+          },
+        },
       })
 
       const { res } = getMockRes()
@@ -581,11 +596,12 @@ describe('Handler', () => {
           pageCount: 1,
         }
       })
-      const adapter = generateNoopAdapter({ getAll, getPaginationData })
+      const adapter = generateNoopAdapter({ getAll, getPaginationData }, [
+        'foo',
+      ])
 
       const handler = NextCrud({
         adapter,
-        resourceName: 'foo',
       })
 
       const { res } = getMockRes()

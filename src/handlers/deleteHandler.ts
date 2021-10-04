@@ -13,10 +13,14 @@ async function deleteHandler<T, Q>({
   request,
   middlewares,
 }: IDeleteHandler<T, Q>): Promise<void> {
-  const resource = await adapter.getOne(resourceId, query)
+  const resource = await adapter.getOne(resourceName, resourceId, query)
 
   if (resource) {
-    const deletedResource = await adapter.delete(resourceId, query)
+    const deletedResource = await adapter.delete(
+      resourceName,
+      resourceId,
+      query
+    )
     await executeMiddlewares(
       [
         ...middlewares,

@@ -1,7 +1,5 @@
 // @ts-ignore
 import { NextApiHandler, NextApiRequest, NextApiResponse } from 'next'
-import { match } from 'path-to-regexp'
-import { IHandlerConfig } from '.'
 import {
   createHandler,
   deleteHandler,
@@ -11,14 +9,29 @@ import {
 } from './handlers'
 import HttpError from './httpError'
 import { parseQuery } from './queryParser'
-import { IAdapter, IHandlerParams, RouteType, TMiddleware } from './types'
+import {
+  IAdapter,
+  IHandlerParams,
+  RouteType,
+  TMiddleware,
+  IPaginationConfig,
+  TModelsOptions,
+  TSwaggerConfig,
+} from './types'
 import {
   getRouteType,
   formatResourceId as formatResourceIdUtil,
   GetRouteType,
   getPaginationOptions,
   applyPaginationOptions,
+  getResourceNameFromUrl,
+  getAccessibleRoutes,
 } from './utils'
+import {
+  getModelsAccessibleRoutes,
+  getSwaggerPaths,
+  getSwaggerTags,
+} from './swagger/utils'
 
 type TCallback<T extends any = undefined> = (
   req: NextApiRequest,
@@ -31,51 +44,40 @@ type TErrorCallback = (
   error: any
 ) => void | Promise<void>
 
-interface ICustomHandlerParams<T, Q> {
-  req: NextApiRequest
-  res: NextApiResponse<T>
-  adapter: IAdapter<T, Q>
-}
-
-interface ICustomHandler<T, Q> {
-  path: string | RegExp | Array<string | RegExp>
-  handler: (params: ICustomHandlerParams<T, Q>) => void | Promise<void>
-  methods?: string[]
-}
-
-interface INextCrudOptions<T, Q> {
-  adapter: IAdapter<T, Q>
-  resourceName: string
+interface INextCrudOptions<T, Q, M extends string = string> {
+  adapter: IAdapter<T, Q, M>
   formatResourceId?: (resourceId: string) => string | number
-  onRequest?: TCallback<GetRouteType>
+  onRequest?: TCallback<GetRouteType & { resourceName: string }>
   onSuccess?: TCallback
   onError?: TErrorCallback
   middlewares?: TMiddleware<T>[]
-  only?: RouteType[]
-  exclude?: RouteType[]
-  customHandlers?: ICustomHandler<T, Q>[]
-  config?: IHandlerConfig
+  pagination?: IPaginationConfig
+  models?: TModelsOptions<M>
+  swagger?: TSwaggerConfig<M>
 }
 
-const defaultConfig: IHandlerConfig = {
-  pagination: {
-    perPage: 20,
-  },
+const defaultPaginationConfig: IPaginationConfig = {
+  perPage: 20,
 }
 
-function NextCrud<T, Q = any>({
+const defaultSwaggerConfig: TSwaggerConfig<string> = {
+  enabled: process.env.NODE_ENV === 'development',
+  path: '/api/docs',
+  title: 'CRUD API',
+  apiUrl: '',
+}
+
+function NextCrud<T, Q = any, M extends string = string>({
   adapter,
-  resourceName,
+  models,
   formatResourceId = formatResourceIdUtil,
   onRequest,
   onSuccess,
   onError,
   middlewares = [],
-  only = [],
-  exclude = [],
-  customHandlers = [],
-  config = defaultConfig,
-}: INextCrudOptions<T, Q>): NextApiHandler<T> {
+  pagination = defaultPaginationConfig,
+  swagger = defaultSwaggerConfig,
+}: INextCrudOptions<T, Q, M>): NextApiHandler<T> {
   if (
     !adapter.create ||
     !adapter.delete ||
@@ -88,27 +90,47 @@ function NextCrud<T, Q = any>({
     throw new Error('missing method in adapter')
   }
 
+  let swaggerJson
+
+  if (swagger?.enabled) {
+    const swaggerRoutes = getModelsAccessibleRoutes(adapter.getModels(), models)
+    const swaggerTags = getSwaggerTags(adapter.getModels(), swagger.config)
+    const swaggerPaths = getSwaggerPaths(swaggerRoutes, swagger?.config, models)
+
+    swaggerJson = {
+      openapi: '3.0.1',
+      info: {
+        title: swagger.title,
+      },
+      servers: [{ url: swagger.apiUrl }],
+      tags: swaggerTags,
+      paths: swaggerPaths,
+    }
+
+    if (adapter.getModelsJsonSchema) {
+      swaggerJson.components = {
+        schemas: adapter.getModelsJsonSchema(),
+      }
+    }
+  }
+
   const handler: NextApiHandler = async (req, res) => {
     const { url, method, body } = req
 
-    let accessibleRoutes: RouteType[] = [
-      RouteType.READ_ALL,
-      RouteType.READ_ONE,
-      RouteType.UPDATE,
-      RouteType.DELETE,
-      RouteType.CREATE,
-    ]
-
-    if (only.length) {
-      accessibleRoutes = accessibleRoutes.filter((elem) => {
-        return only.includes(elem)
-      })
+    if (url.includes(swagger.path) && swagger.enabled) {
+      res.status(200).json(swaggerJson)
+      return
     }
 
-    if (exclude.length) {
-      accessibleRoutes = accessibleRoutes.filter((elem) => {
-        return !exclude.includes(elem)
-      })
+    const modelNames = adapter.getModels().map((modelName) => {
+      return models?.[modelName]?.name ?? modelName
+    })
+    let resourceName = getResourceNameFromUrl(url, modelNames) as M
+
+    if (!resourceName) {
+      res.status(404)
+      res.end()
+      return
     }
 
     try {
@@ -118,9 +140,30 @@ function NextCrud<T, Q = any>({
         resourceName,
       })
 
-      await onRequest?.(req, res, { routeType, resourceId })
+      await onRequest?.(req, res, {
+        routeType,
+        resourceId,
+        resourceName,
+      })
 
-      if (!accessibleRoutes.includes(routeType) && !customHandlers.length) {
+      // If resource name is part of the models config, we should revert it to the original model name
+      if (models) {
+        const originalModel = Object.keys(models).find(
+          (model) => models[model]?.name === resourceName
+        )
+        if (originalModel) {
+          resourceName = originalModel as M
+        }
+      }
+
+      const modelConfig = models?.[resourceName]
+
+      const accessibleRoutes = getAccessibleRoutes(
+        modelConfig?.only,
+        modelConfig?.exclude
+      )
+
+      if (!accessibleRoutes.includes(routeType)) {
         res.status(404).end()
         return
       }
@@ -130,11 +173,11 @@ function NextCrud<T, Q = any>({
       let isPaginated = false
 
       if (routeType === RouteType.READ_ALL) {
-        const pagination = getPaginationOptions(parsedQuery, config.pagination)
+        const paginationOptions = getPaginationOptions(parsedQuery, pagination)
 
-        if (pagination) {
+        if (paginationOptions) {
           isPaginated = true
-          applyPaginationOptions(parsedQuery, pagination)
+          applyPaginationOptions(parsedQuery, paginationOptions)
         }
       }
 
@@ -142,11 +185,14 @@ function NextCrud<T, Q = any>({
         request: req,
         response: res,
         adapter,
-        query: adapter.parseQuery(parsedQuery),
+        query: adapter.parseQuery(resourceName as M, parsedQuery),
         middlewares,
+        resourceName,
       }
 
-      const resourceIdFormatted = formatResourceId(resourceId)
+      const resourceIdFormatted =
+        modelConfig?.formatResourceId?.(resourceId) ??
+        formatResourceId(resourceId)
 
       const executeCrud = async () => {
         try {
@@ -155,7 +201,6 @@ function NextCrud<T, Q = any>({
               await getOneHandler({
                 ...params,
                 resourceId: resourceIdFormatted,
-                resourceName,
               })
               break
             case RouteType.READ_ALL: {
@@ -172,7 +217,6 @@ function NextCrud<T, Q = any>({
               await updateHandler<T, Q>({
                 ...params,
                 resourceId: resourceIdFormatted,
-                resourceName,
                 body,
               })
               break
@@ -180,7 +224,6 @@ function NextCrud<T, Q = any>({
               await deleteHandler<T, Q>({
                 ...params,
                 resourceId: resourceIdFormatted,
-                resourceName,
               })
               break
           }
@@ -195,30 +238,7 @@ function NextCrud<T, Q = any>({
 
       await adapter.connect?.()
 
-      if (customHandlers.length) {
-        const realPath = url.split('?')[0]
-        const customHandler = customHandlers.find(
-          ({ path, methods: customHandlerMethods = ['GET'] }) => {
-            const matcher = match(path, {
-              decode: decodeURIComponent,
-            })
-
-            return !!matcher(realPath) && customHandlerMethods.includes(method)
-          }
-        )
-
-        if (customHandler) {
-          await customHandler.handler({
-            req,
-            res,
-            adapter,
-          })
-        } else {
-          await executeCrud()
-        }
-      } else {
-        await executeCrud()
-      }
+      await executeCrud()
 
       await onSuccess?.(req, res)
     } catch (e) {

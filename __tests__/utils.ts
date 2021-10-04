@@ -2,9 +2,11 @@ import { getMockReq, getMockRes } from '@jest-mock/express'
 import { RouteType, TPaginationOptions } from '../src/types'
 import {
   applyPaginationOptions,
+  ensureCamelCase,
   executeMiddlewares,
   formatResourceId,
   getPaginationOptions,
+  getResourceNameFromUrl,
   getRouteType,
   GetRouteType,
   isPrimitive,
@@ -339,4 +341,14 @@ describe('Pagination options', () => {
       limit: 10,
     })
   })
+})
+
+it('should get the correct matching resource name', () => {
+  const url = '/api/foo'
+
+  expect(getResourceNameFromUrl(url, ['foo'])).toEqual('foo')
+})
+
+it('should ensure the string is in camel case', () => {
+  expect(ensureCamelCase('FooBar')).toBe('fooBar')
 })

@@ -1,0 +1,63 @@
+Next Crud provides a support for Swagger. By default it is enabled only in development environment on the path `/api/docs`.
+
+The support for Swagger has still improvements to be made, feel free to submit an issue if you see any bug or if you need a new feature!
+
+You can configure that through the configuration of the `NextCrud` function under the `swagger` key using the following shape:
+
+```typescript
+export type TSwaggerType = {
+  name: string
+  isArray?: boolean
+  description?: string
+  required?: boolean
+}
+
+export type TSwaggerOperation = {
+  summary?: string
+  responses?: Record<number, any>
+  body?: TSwaggerType
+  response: TSwaggerType
+}
+
+export type TSwaggerTag = {
+  name?: string
+  description?: string
+  externalDocs?: {
+    description: string
+    url: string
+  }
+}
+
+export type TSwaggerParameter = {
+  name: string
+  description?: string
+  schema: {
+    type: string
+  } & any
+}
+
+export type TSwaggerModelsConfig<M extends string> = {
+  [key in M]?: {
+    tag: TSwaggerTag //
+    type?: TSwaggerType
+    routeTypes?: {
+      [RouteType.READ_ALL]?: TSwaggerOperation
+      [RouteType.READ_ONE]?: TSwaggerOperation
+      [RouteType.CREATE]?: TSwaggerOperation
+      [RouteType.UPDATE]?: TSwaggerOperation
+      [RouteType.DELETE]?: TSwaggerOperation
+    }
+    additionalQueryParams?: TSwaggerParameter[]
+  }
+}
+
+export type TSwaggerConfig<M extends string> = {
+  title?: string // Title of the Swagger
+  enabled?: boolean
+  path?: string // Path to the docs
+  apiUrl: string // URL that points to the API root, eg: http://localhost:3000/api
+  config?: TSwaggerModelsConfig<M>
+}
+```
+
+If you need to provide a JSON Schema to your model, it will need to be provided by the `getModelsJsonSchema` method of your adapter. By default, the Prisma adapter provides the JSON Schema for your models and inputs.

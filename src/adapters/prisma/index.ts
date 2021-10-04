@@ -4,12 +4,12 @@ import {
   // @ts-ignore
   PrismaAction,
   // @ts-ignore
-  PrismaClientOptions,
-  // @ts-ignore
   PrismaClientKnownRequestError,
   // @ts-ignore
   PrismaClientValidationError,
 } from '@prisma/client'
+import { transformDMMF } from 'prisma-json-schema-generator/dist/generator/transformDMMF'
+import { getJSONSchemaProperty } from 'prisma-json-schema-generator/dist/generator/properties'
 import HttpError from '../../httpError'
 import { IAdapter, IParsedQueryParams, TPaginationData } from '../../types'
 import { IPrismaParsedQueryParams } from './types'
@@ -17,39 +17,81 @@ import { parsePrismaCursor } from './utils/parseCursor'
 import { parsePrismaOrderBy } from './utils/parseOrderBy'
 import { parsePrismaRecursiveField } from './utils/parseRecursive'
 import { parsePrismaWhere } from './utils/parseWhere'
+import PrismaJsonSchemaParser from './jsonSchemaParser'
 
-interface IAdapterCtorArgs<T> {
-  modelName: keyof PrismaClient
+// Keys that should not be given to the models array
+type TIgnoredPrismaKeys =
+  | 'fetcher'
+  | 'dmmf'
+  | 'connectionPromise'
+  | 'disconnectionPromise'
+  | 'engineConfig'
+  | 'measurePerformance'
+  | 'engine'
+  | 'errorFormat'
+  | '$on'
+  | 'on'
+  | '$connect'
+  | 'connect'
+  | '$disconnect'
+  | 'disconnect'
+  | '$use'
+  | '$executeRaw'
+  | 'executeRaw'
+  | '$queryRaw'
+  | 'queryRaw'
+  | '$transaction'
+  | 'transaction'
+
+interface IAdapterCtorArgs<M extends string = string> {
   primaryKey?: string
-  options?: PrismaClientOptions
-  manyRelations?: string[]
+  manyRelations?: {
+    [key in M]?: string[]
+  }
+  prismaClient: PrismaClient
+  models?: M[]
 }
 
-export default class PrismaAdapter<T>
-  implements IAdapter<T, IPrismaParsedQueryParams>
+export default class PrismaAdapter<
+  T,
+  // @ts-ignore
+  M extends string = keyof Omit<PrismaClient, TIgnoredPrismaKeys>
+> implements IAdapter<T, IPrismaParsedQueryParams, M>
 {
-  private prismaDelegate: Record<PrismaAction, (...args: any[]) => Promise<T>>
   private primaryKey: string
-  private manyRelations: string[]
+  private manyRelations: {
+    [key in M]?: string[]
+  }
   private prismaClient: PrismaClient
+  models: M[]
+  private prismaJsonSchemaParser: PrismaJsonSchemaParser
 
   constructor({
-    modelName,
     primaryKey = 'id',
-    options,
-    manyRelations = [],
-  }: IAdapterCtorArgs<T>) {
-    this.prismaClient = new PrismaClient(options)
-    // @ts-ignore
-    this.prismaDelegate = this.prismaClient[modelName]
+    prismaClient,
+    manyRelations = {},
+    models,
+  }: IAdapterCtorArgs<M>) {
+    this.prismaClient = prismaClient
     this.primaryKey = primaryKey
     this.manyRelations = manyRelations
+    // @ts-ignore
+    const prismaDmmfModels = prismaClient._dmmf?.mappingsMap
+    this.models =
+      // @ts-ignore
+      models ||
+      // @ts-ignore
+      (Object.keys(prismaDmmfModels).map(
+        (modelName) => prismaDmmfModels[modelName].plural
+      ) as M[]) // Retrieve model names from dmmf for prisma v2
+    this.prismaJsonSchemaParser = new PrismaJsonSchemaParser(this.prismaClient)
   }
   async getPaginationData(
+    resourceName: M,
     query: IPrismaParsedQueryParams
   ): Promise<TPaginationData> {
     // @ts-ignore
-    const total: number = await this.prismaDelegate.count({
+    const total: number = await this.getPrismaDelegate(resourceName).count({
       where: query.where,
       distinct: query.distinct,
     })
@@ -79,7 +121,7 @@ export default class PrismaAdapter<T>
     }
   }
 
-  parseQuery(query?: IParsedQueryParams) {
+  parseQuery(resourceName: M, query?: IParsedQueryParams) {
     const parsed: IPrismaParsedQueryParams = {}
 
     if (query.select) {
@@ -91,7 +133,7 @@ export default class PrismaAdapter<T>
     if (query.originalQuery?.where) {
       parsed.where = parsePrismaWhere(
         JSON.parse(query.originalQuery.where),
-        this.manyRelations as string[]
+        this.manyRelations[resourceName]
       )
     }
     if (query.orderBy) {
@@ -113,9 +155,12 @@ export default class PrismaAdapter<T>
     return parsed
   }
 
-  async getAll(query?: IPrismaParsedQueryParams): Promise<T[]> {
+  async getAll(
+    resourceName: M,
+    query?: IPrismaParsedQueryParams
+  ): Promise<T[]> {
     // @ts-ignore
-    const results: T[] = await this.prismaDelegate.findMany({
+    const results: T[] = await this.getPrismaDelegate(resourceName).findMany({
       select: query.select,
       include: query.include,
       where: query.where,
@@ -130,14 +175,16 @@ export default class PrismaAdapter<T>
   }
 
   async getOne(
+    resourceName: M,
     resourceId: string | number,
     query?: IPrismaParsedQueryParams
   ): Promise<T> {
+    const delegate = this.getPrismaDelegate(resourceName)
     /**
      * On prisma v2.12, findOne has been deprecated in favor of findUnique
      * We use findUnique in priority only if it's available
      */
-    const findFn = this.prismaDelegate.findUnique || this.prismaDelegate.findOne
+    const findFn = delegate.findUnique || delegate.findOne
 
     const resource = await findFn({
       where: {
@@ -150,8 +197,12 @@ export default class PrismaAdapter<T>
     return resource
   }
 
-  async create(data: any, query?: IPrismaParsedQueryParams): Promise<T> {
-    const createdResource = await this.prismaDelegate.create({
+  async create(
+    resourceName: M,
+    data: any,
+    query?: IPrismaParsedQueryParams
+  ): Promise<T> {
+    const createdResource = await this.getPrismaDelegate(resourceName).create({
       data,
       select: query.select,
       include: query.include,
@@ -161,11 +212,12 @@ export default class PrismaAdapter<T>
   }
 
   async update(
+    resourceName: M,
     resourceId: string | number,
     data: any,
     query?: IPrismaParsedQueryParams
   ): Promise<T> {
-    const updatedResource = await this.prismaDelegate.update({
+    const updatedResource = await this.getPrismaDelegate(resourceName).update({
       where: {
         [this.primaryKey]: resourceId,
       },
@@ -178,10 +230,11 @@ export default class PrismaAdapter<T>
   }
 
   async delete(
+    resourceName: M,
     resourceId: string | number,
     query?: IPrismaParsedQueryParams
   ): Promise<T> {
-    const deletedResource = await this.prismaDelegate.delete({
+    const deletedResource = await this.getPrismaDelegate(resourceName).delete({
       where: {
         [this.primaryKey]: resourceId,
       },
@@ -202,5 +255,34 @@ export default class PrismaAdapter<T>
 
   get client() {
     return this.prismaClient
+  }
+
+  getModels() {
+    return this.models
+  }
+
+  getModelsJsonSchema() {
+    // @ts-ignore
+    const definitions = this.prismaJsonSchemaParser.parseModels()
+    const models = Object.keys(definitions)
+    const inputs = this.prismaJsonSchemaParser.parseInputTypes(models)
+    const schema = JSON.stringify({
+      ...definitions,
+      ...inputs,
+      ...this.prismaJsonSchemaParser.getPaginationDataSchema(),
+      ...this.prismaJsonSchemaParser.getPaginatedModelsSchemas(models),
+    })
+    const defs = schema.replace(/#\/definitions/g, '#/components/schemas')
+
+    return JSON.parse(defs)
+  }
+
+  private getPrismaDelegate(
+    resourceName: M
+  ): Record<PrismaAction, (...args: any[]) => Promise<T>> {
+    // @ts-ignore
+    return this.prismaClient[
+      `${resourceName.charAt(0).toLowerCase()}${resourceName.slice(1)}`
+    ]
   }
 }

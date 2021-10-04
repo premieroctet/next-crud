@@ -4,13 +4,58 @@ import Link from 'next/link'
 
 The `NextCrud` function accepts one argument which is an object with the following keys
 
-#### resourceName
+#### models
 
-A required string that should match the folder name under which your file is located.
+An object with the following shape:
+
+```typescript
+type TModelOption = {
+  name?: string
+  only?: RouteType[] // An array of routes to serve, by default it serves all possible routes
+  exclude?: RouteType[] // An array of routes to exclude from being served, by default no route is excluded
+  formatResourceId?: (resourceId: string) => string | number
+}
+
+type TModelsOptions<M extends string = string> = {
+  [key in M]?: TModelOption
+}
+```
+
+Each key of the object must correspond to the models passed to your adapter, see <Link href="/adapters">this section</Link>.
+
+Example:
+
+```typescript
+NextCrud({
+  adapter: new PrismaAdapter<User | Post, Prisma.ModelName>({
+    prismaClient: myPrismaClient,
+  }),
+  models: {
+    [Prisma.ModelName.User]: {
+      name: 'users',
+      only: [RouteType.READ_ALL],
+    },
+  },
+})
+```
+
+`only` and `exclude` can have the following values:
+
+- `CREATE`
+- `READ_ONE`
+- `READ_ALL`
+- `UPDATE`
+- `DELETE`
+
+_TypeScript users: you can import the following enum and use it in the array_
+
+```javascript
+import { RouteType } from '@premieroctet/next-crud'
+```
 
 #### adapter
 
-A required instance of an adaptater class, see <Link href="/api-docs/adapters">this section</Link>
+A required instance of an adaptater class, see <Link href="/api-docs/adapters">this section</Link>.
 
 #### formatResourceId
 
@@ -32,49 +77,7 @@ An optional function, see <Link href="/api-docs/callbacks">this section</Link>
 
 An optional array of functions, see <Link href="/api-docs/middlewares">this section</Link>
 
-#### only
-
-An optional array of strings, corresponding to the only routes that should be available. The strings must be one of the following:
-
-- `CREATE`
-- `READ_ONE`
-- `READ_ALL`
-- `UPDATE`
-- `DELETE`
-
-_TypeScript users: you can import the following enum and use it in the array_
-
-```javascript
-import { RouteType } from '@premieroctet/next-crud'
-```
-
-#### exclude
-
-Same as `only`, but defines the routes that should not be available and that will return a 404.
-
-#### customHandlers
-
-Sometimes you might want to add your own routes. This is possible thanks to the optional `customHandlers` property. It accepts an array of objects of the following shape:
-
-```typescript
-interface ICustomHandler<T, Q> {
-  path: string | RegExp | Array<string | RegExp> // path to match (e.g: /(.*)/users/:id)
-  handler: (params: ICustomHandlerParams<T, Q>) => void | Promise<void>
-  methods?: string[] // request methods, defaults to ['GET']
-}
-```
-
-#### config
-
-You can pass a config object with the following shape:
-
-```typescript
-interface IHandlerConfig {
-  pagination?: IPaginationConfig
-}
-```
-
-##### pagination
+#### pagination
 
 The pagination config accepts the following shape:
 

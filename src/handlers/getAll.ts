@@ -12,11 +12,12 @@ async function getAllHandler<T, Q>({
   middlewares,
   request,
   paginated,
+  resourceName,
 }: IGetAllHandler<T, Q>): Promise<void> {
-  const resources = await adapter.getAll(query)
+  const resources = await adapter.getAll(resourceName, query)
   let dataResponse: T[] | TPaginationResult<T> = resources
   if (paginated) {
-    const paginationData = await adapter.getPaginationData(query)
+    const paginationData = await adapter.getPaginationData(resourceName, query)
     dataResponse = {
       data: resources,
       pagination: paginationData,

@@ -4,7 +4,7 @@ Callbacks are functions executed in 3 different situations:
 
 #### onRequest
 
-A request has arrived and the callback is executed right before any action on the database. It receives 2 arguments: the request and the response.
+A request has arrived and the callback is executed right before any action on the database. It receives 4 arguments: the request, the response, an object containing the route type, the resource id and the resource name.
 You can use it to add some custom content to your query params for example, or to just do some debug.
 
 #### onSuccess

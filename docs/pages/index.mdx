@@ -37,7 +37,7 @@ model User {
 }
 ```
 
-- Create a file under `pages/api/users` called `[[...users]].ts`. You can also have 2 files called `index.ts` and `[id].ts` under that folder, both files will have to contain the same content.
+- Create a file under `pages/api` called `[...nextcrud].ts`.
 
 - Import the handler and the adapter you want to use, in that case we will use the prisma adapter but you can use your own one (see <Link href="/api-docs/adapters">this section</Link>)
 
@@ -49,9 +49,8 @@ import NextCrud, { PrismaAdapter } from '@premieroctet/next-crud'
 
 ```javascript
 const handler = NextCrud({
-  resourceName: 'users', // Same as your folder name
   adapter: new PrismaAdapter({
-    modelName: 'user', // Prisma model name, must match the one generated in your prisma client
+    prismaClient: myPrismaClientInstance,
   }),
 })
 
@@ -59,6 +58,8 @@ export default handler
 ```
 
 _More info about all the available options <Link href="/api-docs/options">here</Link>_
+
+You can also find a working example <Link href="https://github.com/premieroctet/next-crud/tree/master/example">on Github</Link>
 
 That will create the following routes:
 
