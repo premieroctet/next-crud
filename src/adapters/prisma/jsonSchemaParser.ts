@@ -19,6 +19,8 @@ function getJSONSchemaScalar(fieldType) {
       return 'object'
     case 'Boolean':
       return 'boolean'
+    case 'Null':
+      return 'null'
   }
 }
 
@@ -188,6 +190,7 @@ class PrismaJsonSchemaParser {
                 return inputTypeData
               })
               .filter(Boolean)
+
             if (anyOf.length === 1) {
               fieldData = anyOf[0]
             } else {
