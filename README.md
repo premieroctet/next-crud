@@ -51,4 +51,4 @@ And get your full featured CRUD routes!
 
 # Example
 
-See the example folder
+[![Open in CodeSandbox](https://img.shields.io/badge/Open%20in-CodeSandbox-blue?style=flat-square&logo=codesandbox)](https://codesandbox.io/s/next-crud-demo-qj3gn)
