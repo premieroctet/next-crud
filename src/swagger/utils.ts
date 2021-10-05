@@ -259,14 +259,24 @@ const generateSwaggerPathObject = <M extends string>({
   return methods
 }
 
-export const getSwaggerPaths = <M extends string>(
-  routes: TRoutes<M>,
-  modelsConfig?: TSwaggerModelsConfig<M>,
+interface IGetSwaggerPathsParams<M extends string> {
+  routes: TRoutes<M>
+  modelsConfig?: TSwaggerModelsConfig<M>
   models?: TModelsOptions<M>
-) => {
+  routesMap?: { [key in M]?: string }
+}
+
+export const getSwaggerPaths = <M extends string>({
+  routes,
+  models,
+  modelsConfig,
+  routesMap,
+}: IGetSwaggerPathsParams<M>) => {
   return Object.keys(routes).reduce((acc, val: M) => {
     const routeTypes = routes[val]
-    const resourceName = models?.[val] ? models[val].name : val
+    const resourceName = models?.[val]?.name
+      ? models[val].name
+      : routesMap?.[val] || val
     const tag = modelsConfig?.[val]?.tag?.name || val
     if (
       routeTypes.includes(RouteType.CREATE) ||

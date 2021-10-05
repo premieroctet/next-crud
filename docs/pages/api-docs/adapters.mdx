@@ -30,6 +30,7 @@ export interface IAdapter<
   handleError?: (err: Error) => void // Used to throw a custom error of your own
   getModels(): M[]
   getModelsJsonSchema?: () => any // JSON Schema of your models, used for Swagger
+  mapModelsToRouteNames?: () => { [key in M]?: string } // Object associating the model name with a route name
 }
 ```
 
@@ -84,7 +85,7 @@ The `PrismaAdapter` class can be instantiated with the following options
 
 #### models
 
-An optional array of the Prisma models you want to support.
+An optional array of the Prisma models you want to support. By default it takes the model names stored in the Prisma client. You can customise that behavior using the `models` configuration option of the `NextCrud` function.
 
 #### primaryKey
 
@@ -102,11 +103,10 @@ The keys of the object must correspond to the models names.
 Example:
 
 ```typescript
-new PrismaAdapter<User | Post>({
-  models: ['user', 'post'],
+new PrismaAdapter<User | Post, ModelName>({
   prismaClient: myPrismaClient,
   manyRelations: {
-    user: ['post'],
+    User: ['posts'],
   },
 })
 ```

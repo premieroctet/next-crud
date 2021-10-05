@@ -8,8 +8,6 @@ import {
   // @ts-ignore
   PrismaClientValidationError,
 } from '@prisma/client'
-import { transformDMMF } from 'prisma-json-schema-generator/dist/generator/transformDMMF'
-import { getJSONSchemaProperty } from 'prisma-json-schema-generator/dist/generator/properties'
 import HttpError from '../../httpError'
 import { IAdapter, IParsedQueryParams, TPaginationData } from '../../types'
 import { IPrismaParsedQueryParams } from './types'
@@ -18,30 +16,6 @@ import { parsePrismaOrderBy } from './utils/parseOrderBy'
 import { parsePrismaRecursiveField } from './utils/parseRecursive'
 import { parsePrismaWhere } from './utils/parseWhere'
 import PrismaJsonSchemaParser from './jsonSchemaParser'
-
-// Keys that should not be given to the models array
-type TIgnoredPrismaKeys =
-  | 'fetcher'
-  | 'dmmf'
-  | 'connectionPromise'
-  | 'disconnectionPromise'
-  | 'engineConfig'
-  | 'measurePerformance'
-  | 'engine'
-  | 'errorFormat'
-  | '$on'
-  | 'on'
-  | '$connect'
-  | 'connect'
-  | '$disconnect'
-  | 'disconnect'
-  | '$use'
-  | '$executeRaw'
-  | 'executeRaw'
-  | '$queryRaw'
-  | 'queryRaw'
-  | '$transaction'
-  | 'transaction'
 
 interface IAdapterCtorArgs<M extends string = string> {
   primaryKey?: string
@@ -52,11 +26,8 @@ interface IAdapterCtorArgs<M extends string = string> {
   models?: M[]
 }
 
-export default class PrismaAdapter<
-  T,
-  // @ts-ignore
-  M extends string = keyof Omit<PrismaClient, TIgnoredPrismaKeys>
-> implements IAdapter<T, IPrismaParsedQueryParams, M>
+export default class PrismaAdapter<T, M extends string>
+  implements IAdapter<T, IPrismaParsedQueryParams, M>
 {
   private primaryKey: string
   private manyRelations: {
@@ -77,13 +48,19 @@ export default class PrismaAdapter<
     this.manyRelations = manyRelations
     // @ts-ignore
     const prismaDmmfModels = prismaClient._dmmf?.mappingsMap
+    if (typeof models !== 'undefined') {
+      models.forEach((model) => {
+        if (!Object.keys(prismaDmmfModels).includes(model)) {
+          throw new Error(`Model name ${model} is invalid.`)
+        }
+      })
+    }
+
     this.models =
       // @ts-ignore
       models ||
       // @ts-ignore
-      (Object.keys(prismaDmmfModels).map(
-        (modelName) => prismaDmmfModels[modelName].plural
-      ) as M[]) // Retrieve model names from dmmf for prisma v2
+      (Object.keys(prismaDmmfModels) as M[]) // Retrieve model names from dmmf for prisma v2
     this.prismaJsonSchemaParser = new PrismaJsonSchemaParser(this.prismaClient)
   }
   async getPaginationData(
@@ -284,5 +261,17 @@ export default class PrismaAdapter<
     return this.prismaClient[
       `${resourceName.charAt(0).toLowerCase()}${resourceName.slice(1)}`
     ]
+  }
+
+  mapModelsToRouteNames() {
+    const models = this.getModels()
+    const routesMap: { [key in M]?: string } = {}
+
+    for (const model of models) {
+      // @ts-ignore
+      routesMap[model] = this.prismaClient._dmmf.mappingsMap[model].plural
+    }
+
+    return routesMap
   }
 }

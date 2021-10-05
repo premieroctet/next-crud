@@ -85,9 +85,17 @@ function NextCrud<T, Q = any, M extends string = string>({
     !adapter.getOne ||
     !adapter.parseQuery ||
     !adapter.update ||
-    !adapter.getPaginationData
+    !adapter.getPaginationData ||
+    !adapter.getModels
   ) {
     throw new Error('missing method in adapter')
+  }
+
+  const routeNames = adapter.mapModelsToRouteNames?.()
+  const modelRoutes: { [key in M]?: string } = {}
+  for (const modelName of adapter.getModels()) {
+    modelRoutes[modelName] =
+      models?.[modelName]?.name || routeNames?.[modelName] || modelName
   }
 
   let swaggerJson
@@ -95,7 +103,12 @@ function NextCrud<T, Q = any, M extends string = string>({
   if (swagger?.enabled) {
     const swaggerRoutes = getModelsAccessibleRoutes(adapter.getModels(), models)
     const swaggerTags = getSwaggerTags(adapter.getModels(), swagger.config)
-    const swaggerPaths = getSwaggerPaths(swaggerRoutes, swagger?.config, models)
+    const swaggerPaths = getSwaggerPaths({
+      routes: swaggerRoutes,
+      modelsConfig: swagger?.config,
+      models,
+      routesMap: routeNames,
+    })
 
     swaggerJson = {
       openapi: '3.0.1',
@@ -122,10 +135,7 @@ function NextCrud<T, Q = any, M extends string = string>({
       return
     }
 
-    const modelNames = adapter.getModels().map((modelName) => {
-      return models?.[modelName]?.name ?? modelName
-    })
-    let resourceName = getResourceNameFromUrl(url, modelNames) as M
+    const { resourceName, modelName } = getResourceNameFromUrl(url, modelRoutes)
 
     if (!resourceName) {
       res.status(404)
@@ -145,16 +155,6 @@ function NextCrud<T, Q = any, M extends string = string>({
         resourceId,
         resourceName,
       })
-
-      // If resource name is part of the models config, we should revert it to the original model name
-      if (models) {
-        const originalModel = Object.keys(models).find(
-          (model) => models[model]?.name === resourceName
-        )
-        if (originalModel) {
-          resourceName = originalModel as M
-        }
-      }
 
       const modelConfig = models?.[resourceName]
 
@@ -185,9 +185,9 @@ function NextCrud<T, Q = any, M extends string = string>({
         request: req,
         response: res,
         adapter,
-        query: adapter.parseQuery(resourceName as M, parsedQuery),
+        query: adapter.parseQuery(modelName as M, parsedQuery),
         middlewares,
-        resourceName,
+        resourceName: modelName,
       }
 
       const resourceIdFormatted =

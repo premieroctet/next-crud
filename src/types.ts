@@ -53,6 +53,7 @@ export interface IAdapter<T, Q, M extends string = string> {
   handleError?: (err: Error) => void
   getModels(): M[]
   getModelsJsonSchema?: () => any
+  mapModelsToRouteNames?: () => { [key in M]?: string }
 }
 
 export type TMiddlewareContext<T> = {

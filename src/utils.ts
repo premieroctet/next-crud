@@ -177,14 +177,22 @@ export const ensureCamelCase = (str: string) => {
 
 export const getResourceNameFromUrl = <M extends string = string>(
   url: string,
-  models: M[]
+  models: { [key in M]?: string }
 ) => {
   const splitUrl = url.split('?')[0]
-  const resourceName = models.find((model) => {
-    return splitUrl.includes(model) || splitUrl.includes(ensureCamelCase(model))
+  const modelName = (Object.keys(models) as M[]).find((modelName) => {
+    const routeName = models[modelName]
+    const camelCaseModel = ensureCamelCase(routeName)
+    return new RegExp(
+      `(${routeName}|${camelCaseModel}$)|(${routeName}|${camelCaseModel}/)`,
+      'g'
+    ).test(splitUrl)
   })
 
-  return resourceName
+  return {
+    modelName,
+    resourceName: models[modelName] as string,
+  }
 }
 
 export const getAccessibleRoutes = (
