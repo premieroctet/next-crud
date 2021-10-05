@@ -3,7 +3,7 @@ import SwaggerUI from 'swagger-ui-react'
 import 'swagger-ui-react/swagger-ui.css'
 
 const Docs = () => {
-  return <SwaggerUI url={`${process.env.NEXT_PUBLIC_API_URL}/docs`} />
+  return <SwaggerUI url={`${window.location.origin}/api/docs`} />
 }
 
 export default Docs

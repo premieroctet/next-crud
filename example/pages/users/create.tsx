@@ -11,7 +11,7 @@ const UserCreate: NextPage = () => {
 
   const onSubmit = async (values: IFormValues) => {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
+      await fetch(`/api/users`, {
         method: 'POST',
         body: JSON.stringify(values),
         headers: {

@@ -49,7 +49,7 @@ const Users = () => {
   }
 
   const onDeleteUser = async (id: User['id']) => {
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${id}`, {
+    await fetch(`/api/users/${id}`, {
       method: 'DELETE',
     })
     refetch()

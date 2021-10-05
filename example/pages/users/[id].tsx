@@ -19,16 +19,13 @@ const UserCreate: NextPage<IProps> = ({ user }) => {
 
   const onSubmit = async (values: IFormValues) => {
     try {
-      const userData = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/${user.id}`,
-        {
-          method: 'PUT',
-          body: JSON.stringify(values),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      ).then((res) => res.json())
+      const userData = await fetch(`/api/users/${user.id}`, {
+        method: 'PUT',
+        body: JSON.stringify(values),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).then((res) => res.json())
       toast({
         status: 'success',
         description: 'User successfully updated',

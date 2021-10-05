@@ -1,4 +1,4 @@
-This example features an implementation of `next-crud`. You can find it on the `pages/api/users/[[...users]].ts` file.
+This example features an implementation of `next-crud`. You can find it on the `pages/api/[...nextcrud].ts` file.
 
 On the client side, we show a list of editable and deletable users, with an edit and creation form.
 

@@ -22,6 +22,9 @@ const Home = () => {
           <Button isFullWidth colorScheme="red" onClick={onCustomUserHandler}>
             Custom user handler
           </Button>
+          <Button isFullWidth colorScheme="green" onClick={() => push('/docs')}>
+            Swagger doc
+          </Button>
         </VStack>
       </VStack>
     </Layout>
