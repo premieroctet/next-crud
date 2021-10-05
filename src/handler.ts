@@ -1,4 +1,3 @@
-// @ts-ignore
 import { NextApiHandler, NextApiRequest, NextApiResponse } from 'next'
 import {
   createHandler,
@@ -99,13 +98,20 @@ function NextCrud<T, Q = any, M extends string = string>({
   }
 
   let swaggerJson
+  const swaggerConfig = {
+    ...defaultSwaggerConfig,
+    ...swagger,
+  }
 
-  if (swagger?.enabled) {
+  if (swaggerConfig?.enabled) {
     const swaggerRoutes = getModelsAccessibleRoutes(adapter.getModels(), models)
-    const swaggerTags = getSwaggerTags(adapter.getModels(), swagger.config)
+    const swaggerTags = getSwaggerTags(
+      adapter.getModels(),
+      swaggerConfig.config
+    )
     const swaggerPaths = getSwaggerPaths({
       routes: swaggerRoutes,
-      modelsConfig: swagger?.config,
+      modelsConfig: swaggerConfig?.config,
       models,
       routesMap: routeNames,
     })
@@ -113,9 +119,10 @@ function NextCrud<T, Q = any, M extends string = string>({
     swaggerJson = {
       openapi: '3.0.1',
       info: {
-        title: swagger.title,
+        title: swaggerConfig.title,
+        version: '1.0',
       },
-      servers: [{ url: swagger.apiUrl }],
+      servers: [{ url: swaggerConfig.apiUrl }],
       tags: swaggerTags,
       paths: swaggerPaths,
     }
@@ -130,7 +137,7 @@ function NextCrud<T, Q = any, M extends string = string>({
   const handler: NextApiHandler = async (req, res) => {
     const { url, method, body } = req
 
-    if (url.includes(swagger.path) && swagger.enabled) {
+    if (url.includes(swaggerConfig.path) && swaggerConfig.enabled) {
       res.status(200).json(swaggerJson)
       return
     }

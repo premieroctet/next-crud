@@ -7,8 +7,6 @@ const handler = NextCrud({
     prismaClient: prisma,
   }),
   swagger: {
-    enabled: true,
-    path: '/api/docs',
     title: 'My API CRUD',
     apiUrl: process.env.API_URL as string,
     config: {

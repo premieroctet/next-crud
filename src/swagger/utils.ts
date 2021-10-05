@@ -230,9 +230,9 @@ const generateSwaggerPathObject = <M extends string>({
           in: 'path',
           name: 'id',
           description: `ID of the ${modelName}`,
+          required: true,
           schema: {
             type: 'string',
-            required: true,
           },
         })
       }

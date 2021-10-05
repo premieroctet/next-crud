@@ -38,6 +38,26 @@ class PrismaJsonSchemaParser {
     // @ts-ignore
     const modelsDefintions = transformDMMF(this.prismaClient._dmmf).definitions
 
+    for (const definition in modelsDefintions) {
+      const properties = modelsDefintions[definition].properties
+
+      for (const property in properties) {
+        if (
+          Array.isArray(properties[property].type) &&
+          properties[property].type.includes('null')
+        ) {
+          properties[property].type = properties[property].type.filter(
+            (type) => type !== 'null'
+          )
+
+          if (properties[property].type.length === 1) {
+            properties[property].type = properties[property].type[0]
+          }
+          properties[property].nullable = true
+        }
+      }
+    }
+
     return modelsDefintions
   }
 
@@ -53,6 +73,7 @@ class PrismaJsonSchemaParser {
           // @ts-ignore
           this.prismaClient._dmmf.mutationType.fieldMap[method].args[0]
             .inputTypes[0].type.fields
+        const requiredProperties: string[] = []
         const properties = dataFields.reduce((propertiesAcc, field) => {
           if (field.inputTypes[0].kind === 'scalar') {
             const schema = getJSONSchemaProperty(
@@ -69,10 +90,8 @@ class PrismaJsonSchemaParser {
                 propertiesAcc[field.name] = {
                   ...schema[1],
                   type: schema[1].type.filter((type) => type !== 'null'),
-                  required: field.isRequired,
                   nullable: true,
                 }
-
                 if (propertiesAcc[field.name].type.length === 1) {
                   propertiesAcc[field.name] = {
                     ...propertiesAcc[field.name],
@@ -81,18 +100,18 @@ class PrismaJsonSchemaParser {
                 }
               }
             } else {
-              propertiesAcc[field.name] = {
-                ...schema[1],
-                required: field.isRequired,
-              }
+              propertiesAcc[field.name] = schema[1]
             }
           } else {
             const typeName = this.parseObjectInputType(field.inputTypes[0])
             propertiesAcc[field.name] = {
               ...typeName,
-              required: field.isRequired,
               nullable: field.isNullable,
             }
+          }
+
+          if (field.isRequired) {
+            requiredProperties.push(field.name)
           }
 
           return propertiesAcc
@@ -101,6 +120,10 @@ class PrismaJsonSchemaParser {
         acc[schemaName] = {
           type: 'object',
           properties,
+        }
+
+        if (requiredProperties.length) {
+          acc[schemaName].required = requiredProperties
         }
       })
 
