@@ -7,8 +7,9 @@ datasource db {
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
+  id       Int      @id @default(autoincrement())
   username String
+  isAdmin  Boolean?
   posts    Post[]
 }
 
