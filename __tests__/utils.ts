@@ -346,7 +346,10 @@ describe('Pagination options', () => {
 it('should get the correct matching resource name', () => {
   const url = '/api/foo'
 
-  expect(getResourceNameFromUrl(url, ['foo'])).toEqual('foo')
+  expect(getResourceNameFromUrl(url, { Foo: 'foo' })).toEqual({
+    modelName: 'Foo',
+    resourceName: 'foo',
+  })
 })
 
 it('should ensure the string is in camel case', () => {
