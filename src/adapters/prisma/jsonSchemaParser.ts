@@ -175,10 +175,28 @@ class PrismaJsonSchemaParser {
         fieldType.type.fields.forEach((field) => {
           let fieldData: Record<string, any> = {}
           if (field.inputTypes.length > 1) {
-            const anyOf = field.inputTypes.map((inputType) => {
-              return this.formatInputTypeData(inputType)
-            })
-            fieldData.anyOf = anyOf
+            let nullable = false
+            const anyOf = field.inputTypes
+              .map((inputType) => {
+                const inputTypeData = this.formatInputTypeData(inputType)
+
+                if (inputTypeData.type === 'null') {
+                  nullable = true
+                  return undefined
+                }
+
+                return inputTypeData
+              })
+              .filter(Boolean)
+            if (anyOf.length === 1) {
+              fieldData = anyOf[0]
+            } else {
+              fieldData.anyOf = anyOf
+            }
+
+            if (nullable) {
+              fieldData.nullable = true
+            }
           } else {
             const inputType = field.inputTypes[0]
             fieldData = this.formatInputTypeData(inputType)
