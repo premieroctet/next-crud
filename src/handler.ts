@@ -156,16 +156,6 @@ function NextCrud<T, Q = any, M extends string = string>({
         resourceName,
       })
 
-      // If resource name is part of the models config, we should revert it to the original model name
-      // if (models) {
-      //   const originalModel = Object.keys(models).find(
-      //     (model) => models[model]?.name === resourceName
-      //   )
-      //   if (originalModel) {
-      //     resourceName = originalModel as M
-      //   }
-      // }
-
       const modelConfig = models?.[resourceName]
 
       const accessibleRoutes = getAccessibleRoutes(
