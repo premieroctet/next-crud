@@ -110,7 +110,7 @@ export default class PrismaAdapter<T, M extends string>
     if (query.originalQuery?.where) {
       parsed.where = parsePrismaWhere(
         JSON.parse(query.originalQuery.where),
-        this.manyRelations[resourceName]
+        this.manyRelations[resourceName] ?? []
       )
     }
     if (query.orderBy) {
