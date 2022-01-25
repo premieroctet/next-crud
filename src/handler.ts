@@ -31,6 +31,7 @@ import {
   getSwaggerPaths,
   getSwaggerTags,
 } from './swagger/utils'
+import { ApiError } from 'next/dist/next-server/server/api-utils'
 
 type TCallback<T extends any = undefined> = (
   req: NextApiRequest,
@@ -235,7 +236,7 @@ function NextCrud<T, Q = any, M extends string = string>({
               break
           }
         } catch (e) {
-          if (adapter.handleError && !(e instanceof HttpError)) {
+          if (adapter.handleError && !(e instanceof ApiError)) {
             adapter.handleError(e)
           } else {
             throw e
@@ -250,7 +251,7 @@ function NextCrud<T, Q = any, M extends string = string>({
       await onSuccess?.(req, res)
     } catch (e) {
       await onError?.(req, res, e)
-      if (e instanceof HttpError) {
+      if (e instanceof ApiError) {
         res.status(e.statusCode).send(e.message)
       } else {
         res.status(500).send(e.message)

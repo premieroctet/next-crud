@@ -1,10 +1,11 @@
 import * as http from 'http'
+import { ApiError } from 'next/dist/next-server/server/api-utils'
 
-export default class HttpError extends Error {
+export default class HttpError extends ApiError {
   statusCode: number
 
   constructor(code: number, message?: string) {
-    super(`${http.STATUS_CODES[code]}: ${message}`)
+    super(code, `${http.STATUS_CODES[code]}: ${message}`)
     this.name = 'HttpError'
     this.statusCode = code
   }
