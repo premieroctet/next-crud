@@ -8,6 +8,7 @@ import {
   TPaginationData,
 } from '../src/types'
 import HttpError from '../src/httpError'
+import { ApiError } from 'next/dist/next-server/server/api-utils'
 
 class NoopAdapter implements IAdapter<unknown, unknown, string> {
   models = []
@@ -219,6 +220,31 @@ describe('Handler', () => {
     expect(onError).toHaveBeenCalledWith(req, res, error)
     expect(res.status).toHaveBeenCalledWith(400)
     expect(res.send).toHaveBeenCalledWith(`${http.STATUS_CODES[400]}: Error`)
+  })
+
+  it('should trigger an 400 HttpError using the default NextJS ApiError', async () => {
+    const error = new ApiError(400, 'Error')
+    const onRequest = jest.fn(() => {
+      throw error
+    })
+
+    const onError = jest.fn()
+
+    const handler = NextCrud({
+      adapter: new NoopAdapter(['foo']),
+      onRequest,
+      onError,
+    })
+    const { res } = getMockRes()
+    const req = getMockReq({
+      url: '/api/foo/bar',
+      method: 'GET',
+    })
+
+    await handler(req, res)
+    expect(onError).toHaveBeenCalledWith(req, res, error)
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.send).toHaveBeenCalledWith(`Error`)
   })
 
   it('should run adapter handleError upon Error', async () => {
