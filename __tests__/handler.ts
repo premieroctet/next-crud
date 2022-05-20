@@ -8,7 +8,7 @@ import {
   TPaginationData,
 } from '../src/types'
 import HttpError from '../src/httpError'
-import { ApiError } from 'next/dist/next-server/server/api-utils'
+import { ApiError } from 'next/dist/server/api-utils'
 
 class NoopAdapter implements IAdapter<unknown, unknown, string> {
   models = []
