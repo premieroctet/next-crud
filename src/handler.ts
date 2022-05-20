@@ -6,7 +6,6 @@ import {
   getOneHandler,
   updateHandler,
 } from './handlers'
-import HttpError from './httpError'
 import { parseQuery } from './queryParser'
 import {
   IAdapter,
@@ -31,7 +30,7 @@ import {
   getSwaggerPaths,
   getSwaggerTags,
 } from './swagger/utils'
-import { ApiError } from 'next/dist/next-server/server/api-utils'
+import { ApiError } from 'next/dist/server/api-utils'
 
 type TCallback<T extends any = undefined> = (
   req: NextApiRequest,
