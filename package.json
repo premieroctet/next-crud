@@ -1,6 +1,6 @@
 {
   "name": "@premieroctet/next-crud",
-  "version": "2.1.4",
+  "version": "2.2.0",
   "description": "Next.js CRUD routes generation helper",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
