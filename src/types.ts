@@ -200,3 +200,5 @@ export type TSwaggerConfig<M extends string> = {
   apiUrl: string
   config?: TSwaggerModelsConfig<M>
 }
+
+export type TDefaultExposeStrategy = 'all' | 'none'

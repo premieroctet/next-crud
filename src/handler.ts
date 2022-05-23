@@ -15,6 +15,7 @@ import {
   IPaginationConfig,
   TModelsOptions,
   TSwaggerConfig,
+  TDefaultExposeStrategy,
 } from './types'
 import {
   getRouteType,
@@ -53,6 +54,7 @@ interface INextCrudOptions<T, Q, M extends string = string> {
   pagination?: IPaginationConfig
   models?: TModelsOptions<M>
   swagger?: TSwaggerConfig<M>
+  defaultExposeStrategy?: TDefaultExposeStrategy
 }
 
 const defaultPaginationConfig: IPaginationConfig = {
@@ -76,6 +78,7 @@ function NextCrud<T, Q = any, M extends string = string>({
   middlewares = [],
   pagination = defaultPaginationConfig,
   swagger = defaultSwaggerConfig,
+  defaultExposeStrategy = 'all',
 }: INextCrudOptions<T, Q, M>): NextApiHandler<T> {
   if (
     !adapter.create ||
@@ -104,7 +107,11 @@ function NextCrud<T, Q = any, M extends string = string>({
   }
 
   if (swaggerConfig?.enabled) {
-    const swaggerRoutes = getModelsAccessibleRoutes(adapter.getModels(), models)
+    const swaggerRoutes = getModelsAccessibleRoutes(
+      adapter.getModels(),
+      models,
+      defaultExposeStrategy
+    )
     const swaggerTags = getSwaggerTags(
       adapter.getModels(),
       swaggerConfig.config
@@ -163,11 +170,12 @@ function NextCrud<T, Q = any, M extends string = string>({
         resourceName,
       })
 
-      const modelConfig = models?.[resourceName]
+      const modelConfig = models?.[modelName]
 
       const accessibleRoutes = getAccessibleRoutes(
         modelConfig?.only,
-        modelConfig?.exclude
+        modelConfig?.exclude,
+        defaultExposeStrategy
       )
 
       if (!accessibleRoutes.includes(routeType)) {

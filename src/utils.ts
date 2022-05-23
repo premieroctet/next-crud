@@ -6,6 +6,7 @@ import {
   IPaginationConfig,
   IParsedQueryParams,
   TPaginationOptions,
+  TDefaultExposeStrategy,
 } from './types'
 
 interface GetRouteTypeParams {
@@ -197,25 +198,27 @@ export const getResourceNameFromUrl = <M extends string = string>(
 
 export const getAccessibleRoutes = (
   only?: RouteType[],
-  exclude?: RouteType[]
+  exclude?: RouteType[],
+  defaultExposeStrategy: TDefaultExposeStrategy = 'all'
 ): RouteType[] => {
-  let accessibleRoutes: RouteType[] = [
-    RouteType.READ_ALL,
-    RouteType.READ_ONE,
-    RouteType.UPDATE,
-    RouteType.DELETE,
-    RouteType.CREATE,
-  ]
+  let accessibleRoutes: RouteType[] =
+    defaultExposeStrategy === 'none'
+      ? []
+      : [
+          RouteType.READ_ALL,
+          RouteType.READ_ONE,
+          RouteType.UPDATE,
+          RouteType.DELETE,
+          RouteType.CREATE,
+        ]
 
-  if (only?.length) {
-    accessibleRoutes = accessibleRoutes.filter((elem) => {
-      return only?.includes(elem)
-    })
+  if (Array.isArray(only)) {
+    accessibleRoutes = only
   }
 
   if (exclude?.length) {
     accessibleRoutes = accessibleRoutes.filter((elem) => {
-      return !exclude?.includes(elem)
+      return !exclude.includes(elem)
     })
   }
 
