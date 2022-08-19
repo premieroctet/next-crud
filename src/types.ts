@@ -36,6 +36,7 @@ export interface IUniqueResourceHandlerParams<T, Q>
 
 export interface IAdapter<T, Q, M extends string = string> {
   models: M[]
+  init?: () => Promise<void>
   parseQuery(resourceName: M, query?: IParsedQueryParams): Q
   getAll(resourceName: M, query?: Q): Promise<T[]>
   getOne(resourceName: M, resourceId: string | number, query?: Q): Promise<T>

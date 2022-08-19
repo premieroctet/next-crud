@@ -29,11 +29,15 @@ Create the file `/pages/api/[...nextcrud].ts.` with:
 ```javascript
 import NextCrud, { PrismaAdapter } from '@premieroctet/next-crud'
 
-const handler = NextCrud({
-  adapter: new PrismaAdapter({
-    prismaClient: myPrismaClientInstance,
-  }),
-})
+const handler = async (req, res) => {
+  const nextCrudHandler = await NextCrud({
+    adapter: new PrismaAdapter({
+      prismaClient: myPrismaClientInstance,
+    }),
+  })
+
+  return nextCrudHandler(req, res)
+}
 
 export default handler
 ```
@@ -52,3 +56,7 @@ And get your full featured CRUD routes!
 # Example
 
 [![Open in CodeSandbox](https://img.shields.io/badge/Open%20in-CodeSandbox-blue?style=flat-square&logo=codesandbox)](https://codesandbox.io/s/next-crud-demo-qj3gn)
+
+# Contributing
+
+You can run the example project to test your modifications. Make sure to run `yarn watch` in the root folder.
