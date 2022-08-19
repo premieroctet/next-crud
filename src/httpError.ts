@@ -1,5 +1,5 @@
 import * as http from 'http'
-import { ApiError } from 'next/dist/next-server/server/api-utils'
+import { ApiError } from 'next/dist/server/api-utils'
 
 export default class HttpError extends ApiError {
   statusCode: number
