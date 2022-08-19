@@ -3,7 +3,7 @@ import {
   TModelsOptions,
   TSwaggerTag,
   TSwaggerModelsConfig,
-  TSwaggerParameter,
+  TDefaultExposeStrategy,
 } from '../types'
 import { getAccessibleRoutes } from '../utils'
 import { getQueryParams } from './parameters'
@@ -147,7 +147,8 @@ type TRoutes<M extends string> = {
 
 export const getModelsAccessibleRoutes = <M extends string>(
   modelNames: M[],
-  models?: TModelsOptions<M>
+  models?: TModelsOptions<M>,
+  defaultExposeStrategy: TDefaultExposeStrategy = 'all'
 ): TRoutes<M> => {
   return modelNames.reduce((acc, modelName) => {
     if (models?.[modelName]) {
@@ -155,14 +156,19 @@ export const getModelsAccessibleRoutes = <M extends string>(
         ...acc,
         [modelName]: getAccessibleRoutes(
           models[modelName].only,
-          models[modelName].exclude
+          models[modelName].exclude,
+          defaultExposeStrategy
         ),
       }
     }
 
     return {
       ...acc,
-      [modelName]: getAccessibleRoutes(),
+      [modelName]: getAccessibleRoutes(
+        undefined,
+        undefined,
+        defaultExposeStrategy
+      ),
     }
   }, {})
 }

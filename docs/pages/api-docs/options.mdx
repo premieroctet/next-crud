@@ -36,6 +36,7 @@ NextCrud({
       only: [RouteType.READ_ALL],
     },
   },
+  defaultExposeStrategy: 'all',
 })
 ```
 
@@ -56,6 +57,10 @@ import { RouteType } from '@premieroctet/next-crud'
 #### adapter
 
 A required instance of an adaptater class, see <Link href="/api-docs/adapters">this section</Link>.
+
+#### defaultExposeStrategy
+
+If `all`, all routes are exposed, if `none`, only the routes specified in the `only` option are exposed. Default to `all`.
 
 #### formatResourceId
 
