@@ -48,11 +48,15 @@ import NextCrud, { PrismaAdapter } from '@premieroctet/next-crud'
 - Then create the handler and export it
 
 ```javascript
-const handler = NextCrud({
-  adapter: new PrismaAdapter({
-    prismaClient: myPrismaClientInstance,
-  }),
-})
+const handler = async (req, res) => {
+  const nextCrudHandler = await NextCrud({
+    adapter: new PrismaAdapter({
+      prismaClient: myPrismaClientInstance,
+    }),
+  })
+
+  return nextCrudHandler(req, res)
+}
 
 export default handler
 ```

@@ -13,6 +13,7 @@ export interface IAdapter<
   M extends string = string
 > {
   models: M[]
+  init?: () => Promise<void> // Called before creating the handler in case you need to initialize the adapter with asynchronous code
   parseQuery(resourceName: M, query?: IParsedQueryParams): Q
   getAll(resourceName: M, query?: Q): Promise<T> // GET /api/resourceName
   getPaginationData(resourceName: M, query: Q): Promise<TPaginationData> // Used for pagination

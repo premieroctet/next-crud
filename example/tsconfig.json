@@ -16,7 +16,13 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
-    "target": "esnext"
+    "target": "esnext",
+    "baseUrl": ".",
+    "paths": {
+      "@premieroctet/next-crud": ["../dist"],
+      "@prisma/client": ["./node_modules/@prisma/client"],
+      "next": ["./node_modules/next"]
+    }
   },
   "exclude": ["node_modules"],
   "include": ["**/*.ts", "**/*.tsx"]
