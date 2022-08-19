@@ -35,11 +35,15 @@ import { Prisma, PrismaClient } from '@prisma/client'
 
 const prismaClient = new PrismaClient()
 
-const handler = NextCrud({
-  adapter: new PrismaAdapter({
-    prismaClient,
-  }),
-})
+const handler = async (req, res) => {
+  const nextCrudHandler = await NextCrud({
+    adapter: new PrismaAdapter({
+      prismaClient: myPrismaClientInstance,
+    }),
+  })
+
+  return nextCrudHandler(req, res)
+}
 
 export default handler
 ```
@@ -69,11 +73,15 @@ import NextCrud, { PrismaAdapter } from '@premieroctet/next-crud'
 ```javascript
 // pages/api/[...nextcrud.ts]
 
-const handler = NextCrud({
-  adapter: new PrismaAdapter({
-    prismaClient: myPrismaClientInstance,
-  }),
-})
+const handler = async (req, res) => {
+  const nextCrudHandler = await NextCrud({
+    adapter: new PrismaAdapter({
+      prismaClient: myPrismaClientInstance,
+    }),
+  })
+
+  return nextCrudHandler(req, res)
+}
 
 export default handler
 ```

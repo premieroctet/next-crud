@@ -68,7 +68,7 @@ const defaultSwaggerConfig: TSwaggerConfig<string> = {
   apiUrl: '',
 }
 
-function NextCrud<T, Q = any, M extends string = string>({
+async function NextCrud<T, Q = any, M extends string = string>({
   adapter,
   models,
   formatResourceId = formatResourceIdUtil,
@@ -79,7 +79,7 @@ function NextCrud<T, Q = any, M extends string = string>({
   pagination = defaultPaginationConfig,
   swagger = defaultSwaggerConfig,
   defaultExposeStrategy = 'all',
-}: INextCrudOptions<T, Q, M>): NextApiHandler<T> {
+}: INextCrudOptions<T, Q, M>): Promise<NextApiHandler<T>> {
   if (
     !adapter.create ||
     !adapter.delete ||
@@ -92,6 +92,8 @@ function NextCrud<T, Q = any, M extends string = string>({
   ) {
     throw new Error('missing method in adapter')
   }
+
+  await adapter.init?.()
 
   const routeNames = adapter.mapModelsToRouteNames?.()
   const modelRoutes: { [key in M]?: string } = {}

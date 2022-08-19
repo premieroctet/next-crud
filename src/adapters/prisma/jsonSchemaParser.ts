@@ -34,11 +34,11 @@ const methodsNames = [
 class PrismaJsonSchemaParser {
   schemaInputTypes: Map<string, any> = new Map<string, any>()
 
-  constructor(private prismaClient: PrismaClient) {}
+  constructor(private prismaClient: PrismaClient, private dmmf: any) {}
 
   parseModels() {
     // @ts-ignore
-    const modelsDefintions = transformDMMF(this.prismaClient._dmmf).definitions
+    const modelsDefintions = transformDMMF(this.dmmf).definitions
 
     for (const definition in modelsDefintions) {
       const properties = modelsDefintions[definition].properties
@@ -73,14 +73,14 @@ class PrismaJsonSchemaParser {
       methods.forEach(({ name: method, schemaName }) => {
         const dataFields =
           // @ts-ignore
-          this.prismaClient._dmmf.mutationType.fieldMap[method].args[0]
-            .inputTypes[0].type.fields
+          this.dmmf.mutationType.fieldMap[method].args[0].inputTypes[0].type
+            .fields
         const requiredProperties: string[] = []
         const properties = dataFields.reduce((propertiesAcc, field) => {
           if (field.inputTypes[0].kind === 'scalar') {
             const schema = getJSONSchemaProperty(
               // @ts-ignore
-              this.prismaClient._dmmf.datamodel,
+              this.dmmf.datamodel,
               {}
             )({
               name: field.name,

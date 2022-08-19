@@ -11,7 +11,7 @@ import HttpError from '../src/httpError'
 import { ApiError } from 'next/dist/server/api-utils'
 
 class NoopAdapter implements IAdapter<unknown, unknown, string> {
-  models = []
+  models: string[] = []
 
   constructor(models: string[] = []) {
     this.models = models
@@ -96,7 +96,7 @@ const generateNoopAdapter = (
 
 describe('Handler', () => {
   it('should run the handler correctly', async () => {
-    const handler = NextCrud({
+    const handler = await NextCrud({
       adapter: new NoopAdapter(['foo']),
     })
     const { res } = getMockRes()
@@ -117,11 +117,11 @@ describe('Handler', () => {
         // @ts-ignore
         adapter: new InvalidAdapter(),
       })
-    ).toThrowError()
+    ).rejects.toBeInstanceOf(Error)
   })
 
   it('should return a 404 error when no path matches', async () => {
-    const handler = NextCrud({
+    const handler = await NextCrud({
       adapter: new NoopAdapter(),
     })
     const { res } = getMockRes()
@@ -139,7 +139,7 @@ describe('Handler', () => {
   it('should run onRequest', async () => {
     const onRequest = jest.fn()
 
-    const handler = NextCrud({
+    const handler = await NextCrud({
       adapter: new NoopAdapter(['foo']),
       onRequest,
     })
@@ -159,7 +159,7 @@ describe('Handler', () => {
   it('should run onSuccess', async () => {
     const onSuccess = jest.fn()
 
-    const handler = NextCrud({
+    const handler = await NextCrud({
       adapter: new NoopAdapter(['foo']),
       onSuccess,
     })
@@ -181,7 +181,7 @@ describe('Handler', () => {
 
     const onError = jest.fn()
 
-    const handler = NextCrud({
+    const handler = await NextCrud({
       adapter: new NoopAdapter(['foo']),
       onRequest,
       onError,
@@ -205,7 +205,7 @@ describe('Handler', () => {
 
     const onError = jest.fn()
 
-    const handler = NextCrud({
+    const handler = await NextCrud({
       adapter: new NoopAdapter(['foo']),
       onRequest,
       onError,
@@ -230,7 +230,7 @@ describe('Handler', () => {
 
     const onError = jest.fn()
 
-    const handler = NextCrud({
+    const handler = await NextCrud({
       adapter: new NoopAdapter(['foo']),
       onRequest,
       onError,
@@ -261,7 +261,7 @@ describe('Handler', () => {
       ['foo']
     )
 
-    const handler = NextCrud({
+    const handler = await NextCrud({
       adapter,
     })
     const { res } = getMockRes()
@@ -275,7 +275,7 @@ describe('Handler', () => {
   })
 
   it('should trigger a 404 if we fetch a route not registered in the only option', async () => {
-    const handler = NextCrud({
+    const handler = await NextCrud({
       adapter: new NoopAdapter(['foo']),
       models: {
         foo: {
@@ -294,7 +294,7 @@ describe('Handler', () => {
   })
 
   it('should trigger a 404 if we fetch a route that is in the exclude option', async () => {
-    const handler = NextCrud({
+    const handler = await NextCrud({
       adapter: new NoopAdapter(['foo']),
       models: {
         foo: {
@@ -315,7 +315,7 @@ describe('Handler', () => {
   it('should trigger the formatResourceId option if provided', async () => {
     const formatResourceId = jest.fn()
 
-    const handler = NextCrud({
+    const handler = await NextCrud({
       adapter: new NoopAdapter(['foo']),
       formatResourceId,
     })
@@ -332,7 +332,7 @@ describe('Handler', () => {
   it('should trigger the formatResourceId option from path config if provided', async () => {
     const formatResourceId = jest.fn()
 
-    const handler = NextCrud({
+    const handler = await NextCrud({
       adapter: new NoopAdapter(['foo']),
       models: {
         foo: {
@@ -354,7 +354,7 @@ describe('Handler', () => {
     const parseQuery = jest.fn()
     const adapter = generateNoopAdapter({ parseQuery }, ['foo'])
 
-    const handler = NextCrud({
+    const handler = await NextCrud({
       adapter,
     })
 
@@ -375,7 +375,7 @@ describe('Handler', () => {
     const disconnect = jest.fn()
     const adapter = generateNoopAdapter({ connect, disconnect }, ['foo'])
 
-    const handler = NextCrud({
+    const handler = await NextCrud({
       adapter,
     })
 
@@ -395,7 +395,7 @@ describe('Handler', () => {
       const data = { foo: 'bar' }
       const getOne = jest.fn(() => data)
       const adapter = generateNoopAdapter({ getOne }, ['foo'])
-      const handler = NextCrud({
+      const handler = await NextCrud({
         adapter,
       })
 
@@ -411,7 +411,7 @@ describe('Handler', () => {
     it('should throw a 404 for a non existing resource', async () => {
       const getOne = jest.fn(() => null)
       const adapter = generateNoopAdapter({ getOne }, ['foo'])
-      const handler = NextCrud({
+      const handler = await NextCrud({
         adapter,
       })
 
@@ -433,7 +433,7 @@ describe('Handler', () => {
       const collection = [{ id: 1 }, { id: 2 }]
       const getAll = jest.fn(() => collection)
       const adapter = generateNoopAdapter({ getAll }, ['foo'])
-      const handler = NextCrud({
+      const handler = await NextCrud({
         adapter,
       })
 
@@ -452,7 +452,7 @@ describe('Handler', () => {
       const data = { foo: 'bar' }
       const create = jest.fn(() => data)
       const adapter = generateNoopAdapter({ create }, ['foo'])
-      const handler = NextCrud({
+      const handler = await NextCrud({
         adapter,
       })
 
@@ -474,7 +474,7 @@ describe('Handler', () => {
       const getOne = jest.fn(() => data)
       const update = jest.fn(() => ({ ...data, ...body }))
       const adapter = generateNoopAdapter({ getOne, update }, ['foo'])
-      const handler = NextCrud({
+      const handler = await NextCrud({
         adapter,
       })
 
@@ -493,7 +493,7 @@ describe('Handler', () => {
       const getOne = jest.fn(() => null)
       const update = jest.fn(() => null)
       const adapter = generateNoopAdapter({ getOne, update }, ['foo'])
-      const handler = NextCrud({
+      const handler = await NextCrud({
         adapter,
       })
 
@@ -514,7 +514,7 @@ describe('Handler', () => {
       const getOne = jest.fn(() => data)
       const deleteFn = jest.fn(() => data)
       const adapter = generateNoopAdapter({ getOne, delete: deleteFn }, ['foo'])
-      const handler = NextCrud({
+      const handler = await NextCrud({
         adapter,
       })
 
@@ -532,7 +532,7 @@ describe('Handler', () => {
       const getOne = jest.fn(() => null)
       const deleteFn = jest.fn(() => null)
       const adapter = generateNoopAdapter({ getOne, delete: deleteFn }, ['foo'])
-      const handler = NextCrud({
+      const handler = await NextCrud({
         adapter,
       })
 
@@ -549,7 +549,7 @@ describe('Handler', () => {
 
   describe('Unknown method', () => {
     it('should return 404 upon unknown method', async () => {
-      const handler = NextCrud({
+      const handler = await NextCrud({
         adapter: new NoopAdapter(['foo']),
       })
 
@@ -564,10 +564,11 @@ describe('Handler', () => {
     })
 
     it('should return 404 upon unknwon method even if accessibleRoutes allows it', async () => {
-      const handler = NextCrud({
+      const handler = await NextCrud({
         adapter: new NoopAdapter(),
         models: {
           foo: {
+            // @ts-ignore
             only: [null],
           },
         },
@@ -584,7 +585,7 @@ describe('Handler', () => {
     })
 
     it('should return 404 upon unknwon method even if its the only one not excluded', async () => {
-      const handler = NextCrud({
+      const handler = await NextCrud({
         adapter: new NoopAdapter(),
         models: {
           foo: {
@@ -626,7 +627,7 @@ describe('Handler', () => {
         'foo',
       ])
 
-      const handler = NextCrud({
+      const handler = await NextCrud({
         adapter,
       })
 

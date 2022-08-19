@@ -35,7 +35,9 @@ export default class PrismaAdapter<T, M extends string>
   }
   private prismaClient: PrismaClient
   models: M[]
+  private _ctorModels: M[]
   private prismaJsonSchemaParser: PrismaJsonSchemaParser
+  private dmmf: any
 
   constructor({
     primaryKey = 'id',
@@ -46,8 +48,31 @@ export default class PrismaAdapter<T, M extends string>
     this.prismaClient = prismaClient
     this.primaryKey = primaryKey
     this.manyRelations = manyRelations
+    this._ctorModels = models
+  }
+
+  getPrismaClientModels = async () => {
     // @ts-ignore
-    const prismaDmmfModels = prismaClient._dmmf?.mappingsMap
+    if (this.prismaClient._dmmf) {
+      // @ts-ignore
+      this.dmmf = this.prismaClient._dmmf
+      // @ts-ignore
+      return this.prismaClient._dmmf?.mappingsMap
+      // @ts-ignore
+    } else if (this.prismaClient._getDmmf) {
+      // @ts-ignore
+      const dmmf = await this.prismaClient._getDmmf()
+      this.dmmf = dmmf
+
+      return dmmf.mappingsMap
+    }
+
+    throw new Error("Couldn't get prisma client models")
+  }
+
+  async init() {
+    const models = this._ctorModels
+    const prismaDmmfModels = await this.getPrismaClientModels()
     if (typeof models !== 'undefined') {
       models.forEach((model) => {
         if (!Object.keys(prismaDmmfModels).includes(model)) {
@@ -58,11 +83,15 @@ export default class PrismaAdapter<T, M extends string>
 
     this.models =
       // @ts-ignore
-      models ||
+      models ??
       // @ts-ignore
       (Object.keys(prismaDmmfModels) as M[]) // Retrieve model names from dmmf for prisma v2
-    this.prismaJsonSchemaParser = new PrismaJsonSchemaParser(this.prismaClient)
+    this.prismaJsonSchemaParser = new PrismaJsonSchemaParser(
+      this.prismaClient,
+      this.dmmf
+    )
   }
+
   async getPaginationData(
     resourceName: M,
     query: IPrismaParsedQueryParams
@@ -269,7 +298,7 @@ export default class PrismaAdapter<T, M extends string>
 
     for (const model of models) {
       // @ts-ignore
-      routesMap[model] = this.prismaClient._dmmf.mappingsMap[model].plural
+      routesMap[model] = this.dmmf.mappingsMap[model].plural
     }
 
     return routesMap

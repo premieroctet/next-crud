@@ -13,7 +13,7 @@ describe('Prisma interraction', () => {
   let adapter: PrismaAdapter<User | Post, Prisma.ModelName>
   let handler: NextApiHandler<User | Post>
 
-  beforeEach(() => {
+  beforeEach(async () => {
     adapter = new PrismaAdapter<User | Post, Prisma.ModelName>({
       prismaClient: prisma,
       manyRelations: {
@@ -24,7 +24,7 @@ describe('Prisma interraction', () => {
         ],
       },
     })
-    handler = NextCrud({
+    handler = await NextCrud({
       adapter,
       models: {
         [Prisma.ModelName.User]: {
@@ -77,7 +77,7 @@ describe('Prisma interraction', () => {
 
     const { res } = getMockRes()
     const req = getMockReq({
-      url: `/api/users/${user.id}`,
+      url: `/api/users/${user!.id}`,
       method: 'GET',
     })
 
@@ -212,14 +212,14 @@ describe('Prisma interraction', () => {
 
     const { res } = getMockRes()
     const req = getMockReq({
-      url: `/api/users?limit=2&cursor={"id":${firstUser.id}}`,
+      url: `/api/users?limit=2&cursor={"id":${firstUser!.id}}`,
       method: 'GET',
     })
 
     const expectedResult = await prisma.user.findMany({
       take: 2,
       cursor: {
-        id: firstUser.id,
+        id: firstUser!.id,
       },
     })
 
@@ -318,7 +318,7 @@ describe('Prisma interraction', () => {
     })
     const { res } = getMockRes()
     const req = getMockReq({
-      url: `/api/users/${user.id}`,
+      url: `/api/users/${user!.id}`,
       method: 'PATCH',
       body: {
         email: 'updated@gmail.com',
@@ -344,7 +344,7 @@ describe('Prisma interraction', () => {
     })
     const { res } = getMockRes()
     const req = getMockReq({
-      url: `/api/users/${user.id}?select=email`,
+      url: `/api/users/${user!.id}?select=email`,
       method: 'PATCH',
       body: {
         email: 'updated1@gmail.com',
@@ -373,7 +373,7 @@ describe('Prisma interraction', () => {
     })
     const { res } = getMockRes()
     const req = getMockReq({
-      url: `/api/users/${user.id}`,
+      url: `/api/users/${user!.id}`,
       method: 'DELETE',
     })
 
