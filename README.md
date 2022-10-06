@@ -28,8 +28,9 @@ Create the file `/pages/api/[...nextcrud].ts.` with:
 
 ```javascript
 import NextCrud, { PrismaAdapter } from '@premieroctet/next-crud'
+import { NextApiRequest, NextApiResponse } from 'next'
 
-const handler = async (req, res) => {
+const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   const nextCrudHandler = await NextCrud({
     adapter: new PrismaAdapter({
       prismaClient: myPrismaClientInstance,
