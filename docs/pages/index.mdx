@@ -28,7 +28,7 @@ npm install -S @premieroctet/next-crud
 ## Quick Start
 
 ```typescript
-// pages/api/[...nextcrud.ts]
+// pages/api/[...nextcrud].ts
 
 import NextCrud, { PrismaAdapter } from '@premieroctet/next-crud'
 import { Prisma, PrismaClient } from '@prisma/client'
@@ -71,7 +71,7 @@ import NextCrud, { PrismaAdapter } from '@premieroctet/next-crud'
 - Then create the handler and export it
 
 ```javascript
-// pages/api/[...nextcrud.ts]
+// pages/api/[...nextcrud].ts
 
 const handler = async (req, res) => {
   const nextCrudHandler = await NextCrud({
