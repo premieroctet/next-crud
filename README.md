@@ -8,7 +8,7 @@
 
 # Documentation
 
-The documentation is available [here](https://next-crud.js.org/)
+The documentation is available [here](https://next-crud-pi.vercel.app/)
 
 # Overview
 

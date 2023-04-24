@@ -19,7 +19,7 @@ const queryParams: Record<string, TSwaggerParameter> = {
   where: {
     name: 'where',
     description:
-      'Fields to filter. See <a href="https://next-crud.js.org/query-params#where">the docs</a>',
+      'Fields to filter. See <a href="https://next-crud-pi.vercel.app/query-params#where">the docs</a>',
     schema: {
       type: 'string',
     },
@@ -27,7 +27,7 @@ const queryParams: Record<string, TSwaggerParameter> = {
   orderBy: {
     name: 'orderBy',
     description:
-      'Field on which to order by a direction. See <a href="https://next-crud.js.org/query-params#orderBy">the docs</a>',
+      'Field on which to order by a direction. See <a href="https://next-crud-pi.vercel.app/query-params#orderBy">the docs</a>',
     schema: {
       type: 'string',
     },

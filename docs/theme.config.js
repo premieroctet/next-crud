@@ -38,14 +38,17 @@ export default {
       <meta name="twitter:site" content="@premieroctet" />
       <meta
         name="twitter:image"
-        content="https://next-crud.js.org/oggraph.png"
+        content="https://next-crud-pi.vercel.app/oggraph.png"
       />
       <meta
         name="og:title"
         content="Next Crud: Full-featured CRUD routes for Next.js"
       />
-      <meta name="og:url" content="https://next-crud.js.org/" />
-      <meta name="og:image" content="https://next-crud.js.org/oggraph.png" />
+      <meta name="og:url" content="https://next-crud-pi.vercel.app/" />
+      <meta
+        name="og:image"
+        content="https://next-crud-pi.vercel.app/oggraph.png"
+      />
       <meta name="apple-mobile-web-app-title" content="Next Crud" />
     </>
   ),
