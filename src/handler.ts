@@ -144,14 +144,15 @@ async function NextCrud<T, Q = any, M extends string = string>({
   }
 
   const handler: NextApiHandler = async (req, res) => {
-    const { url, method, body } = req
-
-    if (url.includes(swaggerConfig.path) && swaggerConfig.enabled) {
+    if (req.url.includes(swaggerConfig.path) && swaggerConfig.enabled) {
       res.status(200).json(swaggerJson)
       return
     }
 
-    const { resourceName, modelName } = getResourceNameFromUrl(url, modelRoutes)
+    const { resourceName, modelName } = getResourceNameFromUrl(
+      req.url,
+      modelRoutes
+    )
 
     if (!resourceName) {
       res.status(404)
@@ -161,8 +162,8 @@ async function NextCrud<T, Q = any, M extends string = string>({
 
     try {
       const { routeType, resourceId } = getRouteType({
-        url,
-        method,
+        url: req.url,
+        method: req.method,
         resourceName,
       })
 
@@ -185,7 +186,7 @@ async function NextCrud<T, Q = any, M extends string = string>({
         return
       }
 
-      const parsedQuery = parseQuery(url.split('?')[1])
+      const parsedQuery = parseQuery(req.url.split('?')[1])
 
       let isPaginated = false
 
@@ -228,13 +229,13 @@ async function NextCrud<T, Q = any, M extends string = string>({
               break
             }
             case RouteType.CREATE:
-              await createHandler<T, Q>({ ...params, body })
+              await createHandler<T, Q>({ ...params, body: req.body })
               break
             case RouteType.UPDATE:
               await updateHandler<T, Q>({
                 ...params,
                 resourceId: resourceIdFormatted,
-                body,
+                body: req.body,
               })
               break
             case RouteType.DELETE:
