@@ -1,4 +1,4 @@
-import { getMockReq, getMockRes } from '@jest-mock/express'
+import { NextApiRequest, NextApiResponse } from 'next'
 import { RouteType, TPaginationOptions } from '../src/types'
 import {
   applyPaginationOptions,
@@ -12,6 +12,7 @@ import {
   GetRouteType,
   isPrimitive,
 } from '../src/utils'
+import { createMocks } from 'node-mocks-http'
 
 describe('getRouteType without query params', () => {
   it('should return READ_ALL type', () => {
@@ -95,13 +96,13 @@ describe('getRouteType without query params', () => {
   })
 
   it('should return null routeType with invalid path for POST', () => {
-    const { routeType } = getRouteType({
-      method: 'POST',
-      url: '/api/foo/1',
-      resourceName: 'foo',
-    })
-
-    expect(routeType).toBeNull()
+    expect(
+      getRouteType({
+        method: 'POST',
+        url: '/api/foo/1',
+        resourceName: 'foo',
+      })?.routeType
+    ).toBeNull()
   })
 
   it('should return null routeType with invalid path for PUT', () => {
@@ -109,29 +110,29 @@ describe('getRouteType without query params', () => {
       method: 'PUT',
       url: '/api/foo',
       resourceName: 'foo',
-    })
+    })!
 
     expect(routeType).toBeNull()
   })
 
   it('should return null routeType with invalid path for PATCH', () => {
-    const { routeType } = getRouteType({
-      method: 'PATCH',
-      url: '/api/foo',
-      resourceName: 'foo',
-    })
-
-    expect(routeType).toBeNull()
+    expect(
+      getRouteType({
+        method: 'PATCH',
+        url: '/api/foo',
+        resourceName: 'foo',
+      })?.routeType
+    ).toBeNull()
   })
 
   it('should return null routeType with invalid path for DELETE', () => {
-    const { routeType } = getRouteType({
-      method: 'DELETE',
-      url: '/api/foo',
-      resourceName: 'foo',
-    })
-
-    expect(routeType).toBeNull()
+    expect(
+      getRouteType({
+        method: 'DELETE',
+        url: '/api/foo',
+        resourceName: 'foo',
+      })?.routeType
+    ).toBeNull()
   })
 })
 
@@ -227,13 +228,16 @@ describe('Middlewares', () => {
       next()
     })
     const fn2 = jest.fn()
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: '/api/foo/bar',
       method: 'GET',
     })
 
-    await executeMiddlewares([fn1, fn2], { req, res, result: {} })
+    await executeMiddlewares([fn1, fn2], {
+      req: req as unknown as NextApiRequest,
+      res: res as unknown as NextApiResponse,
+      result: {},
+    })
     expect(fn1).toHaveBeenCalled()
     expect(fn2).toHaveBeenCalled()
   })
@@ -247,8 +251,7 @@ describe('Middlewares', () => {
       next()
     })
     const fn2 = jest.fn()
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: '/api/foo/bar',
       method: 'GET',
     })
@@ -257,7 +260,11 @@ describe('Middlewares', () => {
       data: 1,
     }
 
-    await executeMiddlewares([fn1, fn2], { req, res, result })
+    await executeMiddlewares([fn1, fn2], {
+      req: req as unknown as NextApiRequest,
+      res: res as unknown as NextApiResponse,
+      result,
+    })
     expect(fn1).toHaveBeenCalled()
     expect(fn2.mock.calls[0][0]).toEqual({
       req,

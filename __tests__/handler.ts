@@ -1,4 +1,3 @@
-import { getMockReq, getMockRes } from '@jest-mock/express'
 import * as http from 'http'
 import NextCrud from '../src/handler'
 import {
@@ -9,6 +8,21 @@ import {
 } from '../src/types'
 import HttpError from '../src/httpError'
 import { ApiError } from 'next/dist/server/api-utils'
+import { RequestOptions, createMocks as createHttpMocks } from 'node-mocks-http'
+import { NextApiRequest, NextApiResponse } from 'next'
+
+const createMocks = (options: RequestOptions) => {
+  const { req, res } = createHttpMocks(options)
+
+  return {
+    req: req as unknown as NextApiRequest,
+    res: {
+      ...res,
+      send: jest.spyOn(res, 'send'),
+      status: jest.spyOn(res, 'status'),
+    } as unknown as NextApiResponse,
+  }
+}
 
 class NoopAdapter implements IAdapter<unknown, unknown, string> {
   models: string[] = []
@@ -99,15 +113,12 @@ describe('Handler', () => {
     const handler = await NextCrud({
       adapter: new NoopAdapter(['foo']),
     })
-    const { res } = getMockRes()
+    const { req, res } = createMocks({
+      url: '/foo',
+      method: 'GET',
+    })
 
-    await handler(
-      getMockReq({
-        url: '/foo',
-        method: 'GET',
-      }),
-      res
-    )
+    await handler(req, res)
     expect(res.send).toHaveBeenCalled()
   })
 
@@ -124,15 +135,12 @@ describe('Handler', () => {
     const handler = await NextCrud({
       adapter: new NoopAdapter(),
     })
-    const { res } = getMockRes()
+    const { req, res } = createMocks({
+      url: '/bar',
+      method: 'GET',
+    })
 
-    await handler(
-      getMockReq({
-        url: '/bar',
-        method: 'GET',
-      }),
-      res
-    )
+    await handler(req, res)
     expect(res.status).toHaveBeenCalledWith(404)
   })
 
@@ -143,8 +151,7 @@ describe('Handler', () => {
       adapter: new NoopAdapter(['foo']),
       onRequest,
     })
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: '/foo/bar',
       method: 'GET',
     })
@@ -163,8 +170,7 @@ describe('Handler', () => {
       adapter: new NoopAdapter(['foo']),
       onSuccess,
     })
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: '/foo/bar',
       method: 'GET',
     })
@@ -186,8 +192,7 @@ describe('Handler', () => {
       onRequest,
       onError,
     })
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: '/api/foo/bar',
       method: 'GET',
     })
@@ -210,8 +215,7 @@ describe('Handler', () => {
       onRequest,
       onError,
     })
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: '/api/foo/bar',
       method: 'GET',
     })
@@ -235,8 +239,7 @@ describe('Handler', () => {
       onRequest,
       onError,
     })
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: '/api/foo/bar',
       method: 'GET',
     })
@@ -264,8 +267,7 @@ describe('Handler', () => {
     const handler = await NextCrud({
       adapter,
     })
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: '/api/foo/bar',
       method: 'GET',
     })
@@ -283,8 +285,7 @@ describe('Handler', () => {
         },
       },
     })
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: '/api/foo/bar',
       method: 'GET',
     })
@@ -302,8 +303,7 @@ describe('Handler', () => {
         },
       },
     })
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: '/api/foo/bar',
       method: 'GET',
     })
@@ -319,8 +319,7 @@ describe('Handler', () => {
       adapter: new NoopAdapter(['foo']),
       formatResourceId,
     })
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: '/api/foo/bar',
       method: 'GET',
     })
@@ -340,8 +339,7 @@ describe('Handler', () => {
         },
       },
     })
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: '/api/foo/bar',
       method: 'GET',
     })
@@ -358,8 +356,7 @@ describe('Handler', () => {
       adapter,
     })
 
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: '/api/foo/bar?foo=bar',
       method: 'GET',
     })
@@ -379,8 +376,7 @@ describe('Handler', () => {
       adapter,
     })
 
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: '/api/foo/bar?foo=bar',
       method: 'GET',
     })
@@ -399,8 +395,7 @@ describe('Handler', () => {
         adapter,
       })
 
-      const { res } = getMockRes()
-      const req = getMockReq({
+      const { req, res } = createMocks({
         url: '/api/foo/bar',
         method: 'GET',
       })
@@ -415,8 +410,7 @@ describe('Handler', () => {
         adapter,
       })
 
-      const { res } = getMockRes()
-      const req = getMockReq({
+      const { req, res } = createMocks({
         url: '/api/foo/bar',
         method: 'GET',
       })
@@ -437,8 +431,7 @@ describe('Handler', () => {
         adapter,
       })
 
-      const { res } = getMockRes()
-      const req = getMockReq({
+      const { req, res } = createMocks({
         url: '/api/foo',
         method: 'GET',
       })
@@ -456,8 +449,7 @@ describe('Handler', () => {
         adapter,
       })
 
-      const { res } = getMockRes()
-      const req = getMockReq({
+      const { req, res } = createMocks({
         url: '/api/foo',
         method: 'POST',
       })
@@ -478,8 +470,7 @@ describe('Handler', () => {
         adapter,
       })
 
-      const { res } = getMockRes()
-      const req = getMockReq({
+      const { req, res } = createMocks({
         url: '/api/foo/bar',
         method: 'PUT',
         body,
@@ -497,8 +488,7 @@ describe('Handler', () => {
         adapter,
       })
 
-      const { res } = getMockRes()
-      const req = getMockReq({
+      const { req, res } = createMocks({
         url: '/api/foo/bar',
         method: 'PUT',
       })
@@ -518,8 +508,7 @@ describe('Handler', () => {
         adapter,
       })
 
-      const { res } = getMockRes()
-      const req = getMockReq({
+      const { req, res } = createMocks({
         url: '/api/foo/bar',
         method: 'DELETE',
       })
@@ -536,8 +525,7 @@ describe('Handler', () => {
         adapter,
       })
 
-      const { res } = getMockRes()
-      const req = getMockReq({
+      const { req, res } = createMocks({
         url: '/api/foo/bar',
         method: 'DELETE',
       })
@@ -553,8 +541,7 @@ describe('Handler', () => {
         adapter: new NoopAdapter(['foo']),
       })
 
-      const { res } = getMockRes()
-      const req = getMockReq({
+      const { req, res } = createMocks({
         url: '/api/foo',
         method: 'OPTIONS',
       })
@@ -574,8 +561,7 @@ describe('Handler', () => {
         },
       })
 
-      const { res } = getMockRes()
-      const req = getMockReq({
+      const { req, res } = createMocks({
         url: '/api/foo',
         method: 'OPTIONS',
       })
@@ -600,8 +586,7 @@ describe('Handler', () => {
         },
       })
 
-      const { res } = getMockRes()
-      const req = getMockReq({
+      const { req, res } = createMocks({
         url: '/api/foo',
         method: 'OPTIONS',
       })
@@ -631,8 +616,7 @@ describe('Handler', () => {
         adapter,
       })
 
-      const { res } = getMockRes()
-      const req = getMockReq({
+      const { req, res } = createMocks({
         url: '/api/foo?page=1',
         method: 'GET',
       })

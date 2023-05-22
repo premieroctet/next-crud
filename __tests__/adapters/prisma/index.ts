@@ -1,10 +1,22 @@
-import { getMockReq, getMockRes } from '@jest-mock/express'
+import { RequestOptions, createMocks as createHttpMocks } from 'node-mocks-http'
 import NextCrud from '../../../src/handler'
 import PrismaAdapter from '../../../src/adapters/prisma'
 import { User, Post, Prisma } from '@prisma/client'
 import prisma from './client'
-import { NextApiHandler } from 'next'
+import { NextApiHandler, NextApiRequest, NextApiResponse } from 'next'
 import { createSeedData } from './seed'
+
+const createMocks = (options: RequestOptions) => {
+  const { req, res } = createHttpMocks(options)
+
+  return {
+    req: req as unknown as NextApiRequest,
+    res: {
+      ...res,
+      send: jest.spyOn(res, 'send'),
+    } as unknown as NextApiResponse,
+  }
+}
 
 describe('Prisma interraction', () => {
   beforeAll(async () => {
@@ -35,8 +47,7 @@ describe('Prisma interraction', () => {
   })
 
   it('should get the list of users', async () => {
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: '/api/users',
       method: 'GET',
     })
@@ -49,8 +60,7 @@ describe('Prisma interraction', () => {
   })
 
   it('should get a page based paginated users list', async () => {
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: '/api/users?page=2&limit=2',
       method: 'GET',
     })
@@ -75,8 +85,7 @@ describe('Prisma interraction', () => {
   it('should get the user with first id', async () => {
     const user = await prisma.user.findFirst()
 
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: `/api/users/${user!.id}`,
       method: 'GET',
     })
@@ -87,8 +96,7 @@ describe('Prisma interraction', () => {
   })
 
   it('should get the list of users with only their email', async () => {
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: '/api/users?select=email',
       method: 'GET',
     })
@@ -105,8 +113,7 @@ describe('Prisma interraction', () => {
   })
 
   it('should get the list of users with only their email and posts', async () => {
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: '/api/users?select=email,posts',
       method: 'GET',
     })
@@ -124,8 +131,7 @@ describe('Prisma interraction', () => {
   })
 
   it('should get the list of users with only their email and posts ids', async () => {
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: '/api/users?select=email,posts,posts.id',
       method: 'GET',
     })
@@ -147,8 +153,7 @@ describe('Prisma interraction', () => {
   })
 
   it('should get the list of users with only their email, posts ids, comments and comments users', async () => {
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: '/api/users?select=email,posts,posts.id,posts.comment,posts.comment.author',
       method: 'GET',
     })
@@ -175,8 +180,7 @@ describe('Prisma interraction', () => {
   })
 
   it('should return the first 2 users', async () => {
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: '/api/users?limit=2',
       method: 'GET',
     })
@@ -191,8 +195,7 @@ describe('Prisma interraction', () => {
   })
 
   it('should return 2 users after the first 2 ones', async () => {
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: '/api/users?skip=2&limit=2',
       method: 'GET',
     })
@@ -210,8 +213,7 @@ describe('Prisma interraction', () => {
   it('should return 2 users based on a cursor', async () => {
     const firstUser = await prisma.user.findFirst()
 
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: `/api/users?limit=2&cursor={"id":${firstUser!.id}}`,
       method: 'GET',
     })
@@ -229,8 +231,7 @@ describe('Prisma interraction', () => {
   })
 
   it('should filter user by its email', async () => {
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: `/api/users?where={"email":{"$eq":"johndoe1@gmail.com"}}`,
       method: 'GET',
     })
@@ -249,8 +250,7 @@ describe('Prisma interraction', () => {
   })
 
   it('should filter users where email does not match', async () => {
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: `/api/users?where={"email":{"$neq":"johndoe1@gmail.com"}}`,
       method: 'GET',
     })
@@ -269,8 +269,7 @@ describe('Prisma interraction', () => {
   })
 
   it('should filter users where email starts with john and ends with .com', async () => {
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: `/api/users?where={"email":{"$and":{"$starts":"john", "$ends":".com"}}}`,
       method: 'GET',
     })
@@ -290,8 +289,7 @@ describe('Prisma interraction', () => {
   })
 
   it('should create a user', async () => {
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: `/api/users`,
       method: 'POST',
       body: {
@@ -316,8 +314,7 @@ describe('Prisma interraction', () => {
         email: 'createdjohn@gmail.com',
       },
     })
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: `/api/users/${user!.id}`,
       method: 'PATCH',
       body: {
@@ -342,8 +339,7 @@ describe('Prisma interraction', () => {
         email: 'updated@gmail.com',
       },
     })
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: `/api/users/${user!.id}?select=email`,
       method: 'PATCH',
       body: {
@@ -371,8 +367,7 @@ describe('Prisma interraction', () => {
         email: 'updated1@gmail.com',
       },
     })
-    const { res } = getMockRes()
-    const req = getMockReq({
+    const { req, res } = createMocks({
       url: `/api/users/${user!.id}`,
       method: 'DELETE',
     })
