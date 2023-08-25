@@ -1,21 +1,19 @@
-import {
-  // @ts-ignore
-  PrismaClient,
-  // @ts-ignore
-  PrismaAction,
-  // @ts-ignore
-  PrismaClientKnownRequestError,
-  // @ts-ignore
-  PrismaClientValidationError,
-} from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 import HttpError from '../../httpError'
+import pluralize from 'pluralize'
 import { IAdapter, IParsedQueryParams, TPaginationData } from '../../types'
 import { IPrismaParsedQueryParams } from './types'
 import { parsePrismaCursor } from './utils/parseCursor'
 import { parsePrismaOrderBy } from './utils/parseOrderBy'
 import { parsePrismaRecursiveField } from './utils/parseRecursive'
 import { parsePrismaWhere } from './utils/parseWhere'
+import { lowerCase } from '../../utils'
 import PrismaJsonSchemaParser from './jsonSchemaParser'
+
+enum DeprecatedActions {
+  findOne = 'findOne',
+}
+type PrismaAction = Prisma.DMMF.ModelAction | DeprecatedActions
 
 interface IAdapterCtorArgs<M extends string = string> {
   primaryKey?: string
@@ -63,8 +61,12 @@ export default class PrismaAdapter<T, M extends string>
       // @ts-ignore
       const dmmf = await this.prismaClient._getDmmf()
       this.dmmf = dmmf
-
       return dmmf.mappingsMap
+      // @ts-ignore
+    } else if (this.prismaClient._runtimeDataModel) {
+      // @ts-ignore
+      this.dmmf = this.prismaClient._runtimeDataModel
+      return this.dmmf.models
     }
 
     throw new Error("Couldn't get prisma client models")
@@ -112,8 +114,8 @@ export default class PrismaAdapter<T, M extends string>
   handleError(err: Error) {
     console.error(err.message)
     if (
-      err instanceof PrismaClientKnownRequestError ||
-      err instanceof PrismaClientValidationError
+      err instanceof Prisma.PrismaClientKnownRequestError ||
+      err instanceof Prisma.PrismaClientValidationError
     ) {
       throw new HttpError(
         400,
@@ -298,7 +300,9 @@ export default class PrismaAdapter<T, M extends string>
 
     for (const model of models) {
       // @ts-ignore
-      routesMap[model] = this.dmmf.mappingsMap[model].plural
+      routesMap[model] = this.dmmf.mappingsMap
+        ? this.dmmf.mappingsMap[model].plural
+        : pluralize(lowerCase(model))
     }
 
     return routesMap

@@ -14,6 +14,7 @@
     "lint": "eslint",
     "prepublishOnly": "yarn lint && yarn build",
     "test": "jest -i",
+    "test:prepare": "yarn add @prisma/client@^5 && cd __tests__/adapters/prisma && npx prisma@5 db push",
     "watch": "tsc --watch"
   },
   "devDependencies": {
@@ -37,7 +38,7 @@
     "typescript": "^4.1.2"
   },
   "optionalDependencies": {
-    "@prisma/client": ">=2",
+    "@prisma/client": "^5",
     "prisma-json-schema-generator": "^3.0.1"
   },
   "husky": {
@@ -52,6 +53,7 @@
     "lodash.isobject": "^3.0.2",
     "lodash.set": "^4.3.2",
     "path-to-regexp": "^6.2.0",
+    "pluralize": "^8.0.0",
     "qs": "^6.9.4"
   }
 }
