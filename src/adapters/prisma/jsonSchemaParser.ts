@@ -1,3 +1,4 @@
+// @ts-ignore
 import { PrismaClient, Prisma } from '@prisma/client'
 import { transformDMMF } from 'prisma-json-schema-generator/dist/generator/transformDMMF'
 import { getJSONSchemaProperty } from 'prisma-json-schema-generator/dist/generator/properties'

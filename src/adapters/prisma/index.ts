@@ -1,3 +1,4 @@
+// @ts-ignore
 import { PrismaClient, Prisma } from '@prisma/client'
 import pluralize from 'pluralize'
 import HttpError from '../../httpError'
