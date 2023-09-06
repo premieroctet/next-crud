@@ -1,0 +1,21 @@
+body {
+  font-family: 'Inter var', sans-serif;
+}
+
+.logo {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.logo .name {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: bold;
+}
+
+.logo .description {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: #6b7280;
+}

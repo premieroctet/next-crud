@@ -1,25 +1,22 @@
+import { ThemeConfig } from 'nextra'
 import Logo from './components/Logo'
 
-export default {
-  repository: 'https://github.com/premieroctet/next-crud',
-  branch: 'master', // branch of docs
-  path: 'docs', // path of docs
-  titleSuffix: ' – Next Crud - Full-featured CRUD routes for Next.js',
-  nextLinks: true,
-  prevLinks: true,
-  search: true,
-  customSearch: null, // customizable, you can use algolia for example
+const config: ThemeConfig = {
+  search: {},
   darkMode: true,
-  footer: true,
-  footerText: 'MIT 2020 © Premier Octet.',
-  footerEditOnGitHubLink: true, // will link to the docs repo
+  project: {
+    link: 'https://github.com/premieroctet/next-crud',
+  },
+  docsRepositoryBase:
+    'https://github.com/premieroctet/next-crud/tree/master/docs',
+  footer: {
+    text: 'MIT 2023 © Premier Octet.',
+  },
   logo: (
-    <div className="flex items-center">
+    <div className="logo">
       <Logo width={45} />
-      <span className="text-lg ml-2 font-bold">Next Crud</span>
-      <span className="text-gray-500 ml-2 text-sm">
-        Full-featured CRUD routes for Next.js
-      </span>
+      <span className="name">Next Crud</span>
+      <span className="description">Full-featured CRUD routes for Next.js</span>
     </div>
   ),
   head: (
@@ -50,6 +47,10 @@ export default {
         content="https://next-crud-pi.vercel.app/oggraph.png"
       />
       <meta name="apple-mobile-web-app-title" content="Next Crud" />
+      <link rel="icon" href="/icon.svg" />
+      <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
     </>
   ),
 }
+
+export default config
