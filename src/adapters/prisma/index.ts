@@ -1,13 +1,5 @@
-import {
-  // @ts-ignore
-  PrismaClient,
-  // @ts-ignore
-  PrismaAction,
-  // @ts-ignore
-  PrismaClientKnownRequestError,
-  // @ts-ignore
-  PrismaClientValidationError,
-} from '@prisma/client'
+import { PrismaClient, Prisma } from '@prisma/client'
+import pluralize from 'pluralize'
 import HttpError from '../../httpError'
 import { IAdapter, IParsedQueryParams, TPaginationData } from '../../types'
 import { IPrismaParsedQueryParams } from './types'
@@ -16,6 +8,7 @@ import { parsePrismaOrderBy } from './utils/parseOrderBy'
 import { parsePrismaRecursiveField } from './utils/parseRecursive'
 import { parsePrismaWhere } from './utils/parseWhere'
 import PrismaJsonSchemaParser from './jsonSchemaParser'
+import { ensureCamelCase } from '../../utils'
 
 interface IAdapterCtorArgs<M extends string = string> {
   primaryKey?: string
@@ -37,7 +30,7 @@ export default class PrismaAdapter<T, M extends string>
   models: M[]
   private _ctorModels: M[]
   private prismaJsonSchemaParser: PrismaJsonSchemaParser
-  private dmmf: any
+  private dmmf: Prisma.DMMF.Document
 
   constructor({
     primaryKey = 'id',
@@ -51,41 +44,29 @@ export default class PrismaAdapter<T, M extends string>
     this._ctorModels = models
   }
 
-  getPrismaClientModels = async () => {
-    // @ts-ignore
-    if (this.prismaClient._dmmf) {
-      // @ts-ignore
-      this.dmmf = this.prismaClient._dmmf
-      // @ts-ignore
-      return this.prismaClient._dmmf?.mappingsMap
-      // @ts-ignore
-    } else if (this.prismaClient._getDmmf) {
-      // @ts-ignore
-      const dmmf = await this.prismaClient._getDmmf()
-      this.dmmf = dmmf
-
-      return dmmf.mappingsMap
+  getPrismaClientModels = () => {
+    if (Prisma.dmmf) {
+      this.dmmf = Prisma.dmmf
+      return Prisma.dmmf.datamodel.models.map((m) => m.name) as M[]
     }
 
-    throw new Error("Couldn't get prisma client models")
+    throw new Error(
+      "Couldn't get prisma client models, make sure you are using Prisma v5 or above."
+    )
   }
 
   async init() {
     const models = this._ctorModels
-    const prismaDmmfModels = await this.getPrismaClientModels()
+    const prismaDmmfModels = this.getPrismaClientModels()
     if (typeof models !== 'undefined') {
       models.forEach((model) => {
-        if (!Object.keys(prismaDmmfModels).includes(model)) {
+        if (!prismaDmmfModels.includes(model)) {
           throw new Error(`Model name ${model} is invalid.`)
         }
       })
     }
 
-    this.models =
-      // @ts-ignore
-      models ??
-      // @ts-ignore
-      (Object.keys(prismaDmmfModels) as M[]) // Retrieve model names from dmmf for prisma v2
+    this.models = models ?? prismaDmmfModels
     this.prismaJsonSchemaParser = new PrismaJsonSchemaParser(
       this.prismaClient,
       this.dmmf
@@ -112,8 +93,8 @@ export default class PrismaAdapter<T, M extends string>
   handleError(err: Error) {
     console.error(err.message)
     if (
-      err instanceof PrismaClientKnownRequestError ||
-      err instanceof PrismaClientValidationError
+      err instanceof Prisma.PrismaClientKnownRequestError ||
+      err instanceof Prisma.PrismaClientValidationError
     ) {
       throw new HttpError(
         400,
@@ -186,13 +167,8 @@ export default class PrismaAdapter<T, M extends string>
     query?: IPrismaParsedQueryParams
   ): Promise<T> {
     const delegate = this.getPrismaDelegate(resourceName)
-    /**
-     * On prisma v2.12, findOne has been deprecated in favor of findUnique
-     * We use findUnique in priority only if it's available
-     */
-    const findFn = delegate.findUnique || delegate.findOne
 
-    const resource = await findFn({
+    const resource = await delegate.findUnique({
       where: {
         [this.primaryKey]: resourceId,
       },
@@ -268,24 +244,22 @@ export default class PrismaAdapter<T, M extends string>
   }
 
   getModelsJsonSchema() {
-    // @ts-ignore
     const definitions = this.prismaJsonSchemaParser.parseModels()
     const models = Object.keys(definitions)
     const inputs = this.prismaJsonSchemaParser.parseInputTypes(models)
     const schema = JSON.stringify({
-      ...definitions,
       ...inputs,
+      ...definitions,
       ...this.prismaJsonSchemaParser.getPaginationDataSchema(),
       ...this.prismaJsonSchemaParser.getPaginatedModelsSchemas(models),
     })
     const defs = schema.replace(/#\/definitions/g, '#/components/schemas')
-
     return JSON.parse(defs)
   }
 
   private getPrismaDelegate(
     resourceName: M
-  ): Record<PrismaAction, (...args: any[]) => Promise<T>> {
+  ): Record<Prisma.PrismaAction, (...args: any[]) => Promise<T>> {
     // @ts-ignore
     return this.prismaClient[
       `${resourceName.charAt(0).toLowerCase()}${resourceName.slice(1)}`
@@ -297,8 +271,13 @@ export default class PrismaAdapter<T, M extends string>
     const routesMap: { [key in M]?: string } = {}
 
     for (const model of models) {
-      // @ts-ignore
-      routesMap[model] = this.dmmf.mappingsMap[model].plural
+      if (this.dmmf.datamodel.models) {
+        routesMap[model] = ensureCamelCase(
+          pluralize(
+            this.dmmf.datamodel.models.find((m) => m.name === model).name
+          )
+        )
+      }
     }
 
     return routesMap
