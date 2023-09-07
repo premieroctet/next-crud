@@ -33,9 +33,9 @@ jobs:
             ${{ runner.os }}-yarn-
       - name: Install dependencies
         run: yarn
-      - name: Check Types
-        run: yarn tsc --noEmit
       - name: Prepare prisma for tests
         run: yarn test:prepare
+      - name: Check Types
+        run: yarn tsc --noEmit
       - name: Run tests
         run: yarn test
