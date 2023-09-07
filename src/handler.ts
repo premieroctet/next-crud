@@ -33,7 +33,7 @@ import {
 } from './swagger/utils'
 import { ApiError } from 'next/dist/server/api-utils'
 
-type TCallback<T extends any = undefined> = (
+type TCallback<T = undefined> = (
   req: NextApiRequest,
   res: NextApiResponse,
   options?: T
@@ -41,7 +41,7 @@ type TCallback<T extends any = undefined> = (
 type TErrorCallback = (
   req: NextApiRequest,
   res: NextApiResponse,
-  error: any
+  error: Error
 ) => void | Promise<void>
 
 interface INextCrudOptions<T, Q, M extends string = string> {
@@ -68,7 +68,7 @@ const defaultSwaggerConfig: TSwaggerConfig<string> = {
   apiUrl: '',
 }
 
-async function NextCrud<T, Q = any, M extends string = string>({
+async function NextCrud<T, Q, M extends string = string>({
   adapter,
   models,
   formatResourceId = formatResourceIdUtil,

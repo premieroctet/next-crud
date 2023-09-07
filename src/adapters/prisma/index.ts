@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // @ts-ignore
 import { PrismaClient, Prisma } from '@prisma/client'
 import pluralize from 'pluralize'

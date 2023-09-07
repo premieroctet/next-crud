@@ -1,5 +1,6 @@
 // @ts-ignore
 import { PrismaClient, Prisma } from '@prisma/client'
+import { JSONSchema6 } from 'json-schema'
 import { transformDMMF } from 'prisma-json-schema-generator/dist/generator/transformDMMF'
 import { getJSONSchemaProperty } from 'prisma-json-schema-generator/dist/generator/properties'
 import { formatSchemaRef } from '../../swagger/utils'
@@ -33,7 +34,7 @@ const methodsNames = [
 ]
 
 class PrismaJsonSchemaParser {
-  schemaInputTypes: Map<string, any> = new Map<string, any>()
+  schemaInputTypes: Map<string, JSONSchema6> = new Map<string, JSONSchema6>()
 
   constructor(
     private prismaClient: PrismaClient,
@@ -178,7 +179,7 @@ class PrismaJsonSchemaParser {
         )
 
         dmmfModel.fields.forEach((field) => {
-          const fieldData: Record<string, any> = {}
+          const fieldData: Record<string, JSONSchema6> = {}
           let nullable = false
 
           const inputTypeData = this.formatInputTypeData(field)
@@ -187,6 +188,8 @@ class PrismaJsonSchemaParser {
           }
 
           if (nullable) {
+            // Nullable is specific to OpenAPI
+            // @ts-expect-error
             fieldData.nullable = true
           }
 

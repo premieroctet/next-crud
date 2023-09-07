@@ -116,11 +116,12 @@ export const formatResourceId = (resourceId: string): string | number => {
 
 const primitiveTypes = ['string', 'boolean', 'number']
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const isPrimitive = (value: any): boolean => {
   return primitiveTypes.includes(typeof value)
 }
 
-export const executeMiddlewares = async <T extends any>(
+export const executeMiddlewares = async <T>(
   middlewares: TMiddleware<T>[],
   ctx: TMiddlewareContext<T>
 ) => {
