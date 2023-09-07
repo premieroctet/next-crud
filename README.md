@@ -6,6 +6,8 @@
 
 `next-crud` is a helper library that creates CRUD API routes with one simple function based on a Prisma model for Next.js.
 
+**Starting from version 3 of the lib, we only support Prisma v5 and above. Please install version 2 of the lib if you are using Prisma v4 or older.**
+
 # Documentation
 
 The documentation is available [here](https://next-crud-pi.vercel.app/)

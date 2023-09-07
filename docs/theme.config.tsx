@@ -10,7 +10,7 @@ const config: ThemeConfig = {
   docsRepositoryBase:
     'https://github.com/premieroctet/next-crud/tree/master/docs',
   footer: {
-    text: 'MIT 2023 © Premier Octet.',
+    text: `MIT ${new Date().getFullYear()} © Premier Octet.`,
   },
   logo: (
     <div className="logo">
