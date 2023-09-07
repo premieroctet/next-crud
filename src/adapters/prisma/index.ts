@@ -31,7 +31,7 @@ export default class PrismaAdapter<T, M extends string>
   models: M[]
   private _ctorModels: M[]
   private prismaJsonSchemaParser: PrismaJsonSchemaParser
-  private dmmf: Prisma.DMMF
+  private dmmf: Prisma.DMMF.Document
 
   constructor({
     primaryKey = 'id',
