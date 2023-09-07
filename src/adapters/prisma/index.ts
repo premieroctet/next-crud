@@ -31,7 +31,7 @@ export default class PrismaAdapter<T, M extends string>
   models: M[]
   private _ctorModels: M[]
   private prismaJsonSchemaParser: PrismaJsonSchemaParser
-  private dmmf: Prisma.DMMF.Document
+  private dmmf: Prisma.DMMF
 
   constructor({
     primaryKey = 'id',
@@ -47,6 +47,7 @@ export default class PrismaAdapter<T, M extends string>
 
   getPrismaClientModels = () => {
     if (Prisma.dmmf) {
+      // @ts-ignore
       this.dmmf = Prisma.dmmf
       return Prisma.dmmf.datamodel.models.map((m) => m.name) as M[]
     }
