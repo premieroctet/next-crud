@@ -2,6 +2,7 @@ import { IHandlerParams } from '../types'
 import { executeMiddlewares } from '../utils'
 
 interface ICreateHandler<T, Q> extends IHandlerParams<T, Q> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   body: Record<string, any>
 }
 

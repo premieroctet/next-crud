@@ -55,6 +55,7 @@ const generateContentForSchema = (schemaName: string, isArray?: boolean) => {
 const generateSwaggerResponse = (
   routeType: RouteType,
   modelName: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): { statusCode: number; content: any } => {
   switch (routeType) {
     case RouteType.CREATE:

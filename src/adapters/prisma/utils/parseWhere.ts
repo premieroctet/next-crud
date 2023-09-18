@@ -1,4 +1,3 @@
-import { types } from 'util'
 import isObject from 'lodash.isobject'
 import {
   TCondition,
@@ -36,7 +35,7 @@ const isDateString = (value: string) =>
     value
   )
 
-const getSearchValue = (originalValue: any): TSearchCondition => {
+const getSearchValue = (originalValue: string): TSearchCondition => {
   if (isDateString(originalValue)) {
     return new Date(originalValue)
   }
@@ -99,7 +98,7 @@ const basicParse = (
   manyRelations: string[]
 ) => {
   if (isPrimitive(value)) {
-    parsed[key] = getSearchValue(value)
+    parsed[key] = getSearchValue(value as string)
   } else {
     switch (key) {
       case '$or': {

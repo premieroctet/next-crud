@@ -1,4 +1,6 @@
-import { PrismaClient } from '@prisma/client'
+// @ts-ignore
+import { PrismaClient, Prisma } from '@prisma/client'
+import { JSONSchema6 } from 'json-schema'
 import { transformDMMF } from 'prisma-json-schema-generator/dist/generator/transformDMMF'
 import { getJSONSchemaProperty } from 'prisma-json-schema-generator/dist/generator/properties'
 import { formatSchemaRef } from '../../swagger/utils'
@@ -32,12 +34,14 @@ const methodsNames = [
 ]
 
 class PrismaJsonSchemaParser {
-  schemaInputTypes: Map<string, any> = new Map<string, any>()
+  schemaInputTypes: Map<string, JSONSchema6> = new Map<string, JSONSchema6>()
 
-  constructor(private prismaClient: PrismaClient, private dmmf: any) {}
+  constructor(
+    private prismaClient: PrismaClient,
+    private dmmf: Prisma.DMMF.Document
+  ) {}
 
   parseModels() {
-    // @ts-ignore
     const modelsDefintions = transformDMMF(this.dmmf).definitions
 
     for (const definition in modelsDefintions) {
@@ -70,22 +74,24 @@ class PrismaJsonSchemaParser {
         schemaName: `${method.schemaNameStart}${modelName}`,
       }))
 
-      methods.forEach(({ name: method, schemaName }) => {
-        const dataFields =
-          // @ts-ignore
-          this.dmmf.mutationType.fieldMap[method].args[0].inputTypes[0].type
-            .fields
+      methods.forEach(({ schemaName }) => {
+        const dataFields = this.dmmf.datamodel.models.find(
+          (model) => model.name === modelName
+        ).fields
         const requiredProperties: string[] = []
         const properties = dataFields.reduce((propertiesAcc, field) => {
-          if (field.inputTypes[0].kind === 'scalar') {
-            const schema = getJSONSchemaProperty(
-              // @ts-ignore
-              this.dmmf.datamodel,
-              {}
-            )({
-              name: field.name,
-              ...field.inputTypes[0],
-            })
+          // We don't want to create passing an id field
+          if (field.isId) {
+            return propertiesAcc
+          }
+
+          // We don't want to create or update a readonly field
+          if (field.isReadOnly) {
+            return propertiesAcc
+          }
+
+          if (field.kind === 'scalar') {
+            const schema = getJSONSchemaProperty(this.dmmf.datamodel, {})(field)
 
             if (schema[1].type && Array.isArray(schema[1].type)) {
               if (schema[1].type.includes('null')) {
@@ -103,12 +109,6 @@ class PrismaJsonSchemaParser {
               }
             } else {
               propertiesAcc[field.name] = schema[1]
-            }
-          } else {
-            const typeName = this.parseObjectInputType(field.inputTypes[0])
-            propertiesAcc[field.name] = {
-              ...typeName,
-              nullable: field.isNullable,
             }
           }
 
@@ -142,9 +142,9 @@ class PrismaJsonSchemaParser {
     return definitions
   }
 
-  formatInputTypeData(inputType) {
+  formatInputTypeData(inputType: Prisma.DMMF.Field) {
     if (inputType.kind === 'object') {
-      const ref = formatSchemaRef(inputType.type.name)
+      const ref = formatSchemaRef(inputType.type)
       if (inputType.isList) {
         return {
           type: 'array',
@@ -169,54 +169,41 @@ class PrismaJsonSchemaParser {
     }
   }
 
-  parseObjectInputType(fieldType: any) {
+  parseObjectInputType(fieldType: Prisma.DMMF.Field) {
     if (fieldType.kind === 'object') {
-      if (!this.schemaInputTypes.has(fieldType.type.name)) {
-        this.schemaInputTypes.set(fieldType.type.name, {})
+      if (!this.schemaInputTypes.has(fieldType.type)) {
+        this.schemaInputTypes.set(fieldType.type, {})
 
-        fieldType.type.fields.forEach((field) => {
-          let fieldData: Record<string, any> = {}
-          if (field.inputTypes.length > 1) {
-            let nullable = false
-            const anyOf = field.inputTypes
-              .map((inputType) => {
-                const inputTypeData = this.formatInputTypeData(inputType)
+        const dmmfModel = this.dmmf.datamodel.models.find(
+          (model) => model.name === fieldType.type
+        )
 
-                if (inputTypeData.type === 'null') {
-                  nullable = true
-                  return undefined
-                }
+        dmmfModel.fields.forEach((field) => {
+          const fieldData: Record<string, JSONSchema6> = {}
+          let nullable = false
 
-                return inputTypeData
-              })
-              .filter(Boolean)
-
-            if (anyOf.length === 1) {
-              fieldData = anyOf[0]
-            } else {
-              fieldData.anyOf = anyOf
-            }
-
-            if (nullable) {
-              fieldData.nullable = true
-            }
-          } else {
-            const inputType = field.inputTypes[0]
-            fieldData = this.formatInputTypeData(inputType)
+          const inputTypeData = this.formatInputTypeData(field)
+          if (inputTypeData.type === 'null') {
+            nullable = true
           }
-          this.schemaInputTypes.set(fieldType.type.name, {
-            ...this.schemaInputTypes.get(fieldType.type.name),
+
+          if (nullable) {
+            // Nullable is specific to OpenAPI
+            // @ts-expect-error
+            fieldData.nullable = true
+          }
+
+          this.schemaInputTypes.set(fieldType.type, {
+            ...this.schemaInputTypes.get(fieldType.type),
             [field.name]: fieldData,
           })
 
-          field.inputTypes.forEach((inputType) => {
-            if (inputType.kind === 'object') {
-              this.parseObjectInputType(inputType)
-            }
-          })
+          if (field.kind === 'object') {
+            this.parseObjectInputType(field)
+          }
         })
       }
-      return { $ref: formatSchemaRef(fieldType.type.name) }
+      return { $ref: formatSchemaRef(fieldType.type) }
     }
 
     return { type: getJSONSchemaScalar(fieldType.type) }
