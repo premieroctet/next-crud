@@ -10,7 +10,7 @@
 
 # Documentation
 
-The documentation is available [here](https://next-crud-pi.vercel.app/)
+The documentation is available [here](https://next-crud.js.org/)
 
 # Overview
 
