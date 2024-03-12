@@ -40,7 +40,7 @@ const prismaClient = new PrismaClient()
 const handler = async (req, res) => {
   const nextCrudHandler = await NextCrud({
     adapter: new PrismaAdapter({
-      prismaClient: myPrismaClientInstance,
+      prismaClient: prismaClient,
     }),
   })
 
