@@ -8,14 +8,13 @@ interface IUpdateHandler<T, Q> extends IUniqueResourceHandlerParams<T, Q> {
 
 async function updateHandler<T, Q>({
   adapter,
-  response,
   body,
   resourceId,
   resourceName,
   query,
   middlewares,
   request,
-}: IUpdateHandler<T, Q>): Promise<void> {
+}: IUpdateHandler<T, Q>): Promise<Awaited<T>> {
   const resource = await adapter.getOne(resourceName, resourceId, query)
 
   if (resource) {
@@ -25,19 +24,12 @@ async function updateHandler<T, Q>({
       body,
       query
     )
-    await executeMiddlewares(
-      [
-        ...middlewares,
-        ({ result }) => {
-          response.send(result)
-        },
-      ],
-      {
-        req: request,
-        res: response,
-        result: updatedResource,
-      }
-    )
+    await executeMiddlewares(middlewares, {
+      req: request,
+      result: updatedResource,
+    })
+
+    return updatedResource
   } else {
     throw new HttpError(404, `${resourceName} ${resourceId} not found`)
   }

@@ -1,11 +1,6 @@
 import * as http from 'http'
 import NextCrud from '../src/handler'
-import {
-  IAdapter,
-  IParsedQueryParams,
-  RouteType,
-  TPaginationData,
-} from '../src/types'
+import { IAdapter, RouteType, TPaginationData } from '../src/types'
 import HttpError from '../src/httpError'
 import { ApiError } from 'next/dist/server/api-utils'
 import { RequestOptions, createMocks as createHttpMocks } from 'node-mocks-http'
@@ -31,50 +26,29 @@ class NoopAdapter implements IAdapter<unknown, unknown, string> {
     this.models = models
   }
 
-  async getPaginationData(
-    resourceName: string,
-    query: unknown,
-    lastElement?: unknown
-  ): Promise<TPaginationData> {
+  async getPaginationData(): Promise<TPaginationData> {
     return {
       total: 1,
       pageCount: 1,
       page: 1,
     }
   }
-  parseQuery(resourceName: string, query?: IParsedQueryParams): unknown {
+  parseQuery(): unknown {
     return {}
   }
-  async getAll(resourceName: string, query?: unknown): Promise<unknown[]> {
+  async getAll(): Promise<unknown[]> {
     return []
   }
-  async getOne(
-    resourceName: string,
-    resourceId: string | number,
-    query?: unknown
-  ): Promise<unknown> {
+  async getOne(): Promise<unknown> {
     return {}
   }
-  async create(
-    resourceName: string,
-    data: any,
-    query?: unknown
-  ): Promise<unknown> {
+  async create(): Promise<unknown> {
     return {}
   }
-  async update(
-    resourceName: string,
-    resourceId: string | number,
-    data: any,
-    query?: unknown
-  ): Promise<unknown> {
+  async update(): Promise<unknown> {
     return {}
   }
-  async delete(
-    resourceName: string,
-    resourceId: string | number,
-    query?: unknown
-  ): Promise<unknown> {
+  async delete(): Promise<unknown> {
     return {}
   }
 
@@ -91,7 +65,7 @@ class InvalidAdapter {}
 
 const generateNoopAdapter = (
   methods: {
-    [name in keyof IAdapter<unknown, unknown>]?: (...args: any[]) => any
+    [name in keyof IAdapter<unknown, unknown>]?: (...args: unknown[]) => unknown
   },
   models: string[] = []
 ) => {
