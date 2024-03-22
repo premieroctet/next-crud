@@ -23,4 +23,5 @@ model Post {
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../../node_modules/.prisma/client"
 }

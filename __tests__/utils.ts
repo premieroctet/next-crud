@@ -1,4 +1,3 @@
-import { NextApiRequest, NextApiResponse } from 'next'
 import { RouteType, TPaginationOptions } from '../src/types'
 import {
   applyPaginationOptions,
@@ -12,7 +11,6 @@ import {
   GetRouteType,
   isPrimitive,
 } from '../src/utils'
-import { createMocks } from 'node-mocks-http'
 
 describe('getRouteType without query params', () => {
   it('should return READ_ALL type', () => {
@@ -228,14 +226,12 @@ describe('Middlewares', () => {
       next()
     })
     const fn2 = jest.fn()
-    const { req, res } = createMocks({
-      url: '/api/foo/bar',
+    const req = new Request(new URL('/api/foo/bar', 'http://localhost'), {
       method: 'GET',
     })
 
     await executeMiddlewares([fn1, fn2], {
-      req: req as unknown as NextApiRequest,
-      res: res as unknown as NextApiResponse,
+      req,
       result: {},
     })
     expect(fn1).toHaveBeenCalled()
@@ -251,8 +247,7 @@ describe('Middlewares', () => {
       next()
     })
     const fn2 = jest.fn()
-    const { req, res } = createMocks({
-      url: '/api/foo/bar',
+    const req = new Request(new URL('/api/foo/bar', 'http://localhost'), {
       method: 'GET',
     })
 
@@ -261,14 +256,12 @@ describe('Middlewares', () => {
     }
 
     await executeMiddlewares([fn1, fn2], {
-      req: req as unknown as NextApiRequest,
-      res: res as unknown as NextApiResponse,
+      req,
       result,
     })
     expect(fn1).toHaveBeenCalled()
     expect(fn2.mock.calls[0][0]).toEqual({
       req,
-      res,
       result: { customKey: result },
     })
   })

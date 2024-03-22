@@ -6,13 +6,12 @@ interface IDeleteHandler<T, Q> extends IUniqueResourceHandlerParams<T, Q> {}
 
 async function deleteHandler<T, Q>({
   adapter,
-  response,
   resourceId,
   resourceName,
   query,
   request,
   middlewares,
-}: IDeleteHandler<T, Q>): Promise<void> {
+}: IDeleteHandler<T, Q>): Promise<Awaited<T>> {
   const resource = await adapter.getOne(resourceName, resourceId, query)
 
   if (resource) {
@@ -21,19 +20,12 @@ async function deleteHandler<T, Q>({
       resourceId,
       query
     )
-    await executeMiddlewares(
-      [
-        ...middlewares,
-        ({ result }) => {
-          response.send(result)
-        },
-      ],
-      {
-        req: request,
-        res: response,
-        result: deletedResource,
-      }
-    )
+    await executeMiddlewares(middlewares, {
+      req: request,
+      result: deletedResource,
+    })
+
+    return deletedResource
   } else {
     throw new HttpError(404, `${resourceName} ${resourceId} not found`)
   }

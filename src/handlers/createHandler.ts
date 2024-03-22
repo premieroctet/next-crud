@@ -8,27 +8,19 @@ interface ICreateHandler<T, Q> extends IHandlerParams<T, Q> {
 
 async function createHandler<T, Q>({
   adapter,
-  response,
   body,
   query,
   request,
   middlewares,
   resourceName,
-}: ICreateHandler<T, Q>): Promise<void> {
+}: ICreateHandler<T, Q>): Promise<Awaited<T>> {
   const createdResource = await adapter.create(resourceName, body, query)
-  await executeMiddlewares(
-    [
-      ...middlewares,
-      ({ result }) => {
-        response.status(201).send(result)
-      },
-    ],
-    {
-      req: request,
-      res: response,
-      result: createdResource,
-    }
-  )
+  await executeMiddlewares(middlewares, {
+    req: request,
+    result: createdResource,
+  })
+
+  return createdResource
 }
 
 export default createHandler

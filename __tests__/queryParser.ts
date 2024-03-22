@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { parseQuery } from '../src/queryParser'
 import { IParsedQueryParams } from '../src/types'
 

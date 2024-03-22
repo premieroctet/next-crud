@@ -29,6 +29,8 @@ npm install -S @premieroctet/next-crud
 
 ## Quick Start
 
+### Page Router
+
 ```typescript
 // pages/api/[...nextcrud].ts
 
@@ -48,6 +50,27 @@ const handler = async (req, res) => {
 }
 
 export default handler
+```
+
+### App Router
+
+```typescript
+// app/api/[...nextcrud]/route.ts
+import { User, Post, Prisma } from '@prisma/client'
+import NextCrud, { PrismaAdapter } from '@premieroctet/next-crud'
+import { prisma } from '../../../../db'
+
+const handler = async (req: Request) => {
+  const nextCrudHandler = await NextCrud({
+    adapter: new PrismaAdapter({
+      prismaClient: prisma,
+    }),
+  })
+
+  return nextCrudHandler(req)
+}
+
+export { handler as POST, handler as GET, handler as PUT, handler as DELETE }
 ```
 
 ## Usage

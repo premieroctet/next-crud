@@ -7,13 +7,12 @@ interface IGetAllHandler<T, Q> extends IHandlerParams<T, Q> {
 
 async function getAllHandler<T, Q>({
   adapter,
-  response,
   query,
   middlewares,
   request,
   paginated,
   resourceName,
-}: IGetAllHandler<T, Q>): Promise<void> {
+}: IGetAllHandler<T, Q>): Promise<T[] | TPaginationResult<T>> {
   const resources = await adapter.getAll(resourceName, query)
   let dataResponse: T[] | TPaginationResult<T> = resources
   if (paginated) {
@@ -23,22 +22,14 @@ async function getAllHandler<T, Q>({
       pagination: paginationData,
     }
   }
-  await executeMiddlewares<T[] | TPaginationResult<T>>(
-    // @ts-ignore
-    [
-      // @ts-ignore
-      ...middlewares,
-      // @ts-ignore
-      ({ result }) => {
-        response.send(result)
-      },
-    ],
-    {
-      req: request,
-      res: response,
-      result: dataResponse,
-    }
-  )
+
+  // @ts-expect-error
+  await executeMiddlewares<T[] | TPaginationResult<T>>(middlewares, {
+    req: request,
+    result: dataResponse,
+  })
+
+  return dataResponse
 }
 
 export default getAllHandler
