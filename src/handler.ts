@@ -289,9 +289,12 @@ async function NextCrud<T, Q, M extends string = string>({
     } catch (e) {
       await onError?.(req, e)
       if (e instanceof ApiError) {
-        response = new Response(e.message, { status: e.statusCode })
+        response = Response.json(
+          { message: e.message },
+          { status: e.statusCode }
+        )
       } else {
-        response = new Response(e.message, { status: 500 })
+        response = Response.json({ message: e.message }, { status: 500 })
       }
     } finally {
       await adapter.disconnect?.()

@@ -94,7 +94,6 @@ export default class PrismaAdapter<T, M extends string>
   }
 
   handleError(err: Error) {
-    console.error(err.message)
     if (
       err instanceof Prisma.PrismaClientKnownRequestError ||
       err instanceof Prisma.PrismaClientValidationError
