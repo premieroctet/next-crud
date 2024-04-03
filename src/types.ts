@@ -1,6 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { NextApiRequest, NextApiResponse } from 'next'
-
 export enum RouteType {
   CREATE = 'CREATE',
   READ_ALL = 'READ_ALL',
@@ -22,8 +20,7 @@ export type TModelsOptions<M extends string = string> = {
 
 export interface IHandlerParams<T, Q> {
   adapter: IAdapter<T, Q>
-  request: NextApiRequest
-  response: NextApiResponse
+  request: TInternalRequest
   query: Q
   middlewares: TMiddleware<T>[]
   resourceName: string
@@ -59,8 +56,7 @@ export interface IAdapter<T, Q, M extends string = string> {
 }
 
 export type TMiddlewareContext<T> = {
-  req: NextApiRequest
-  res: NextApiResponse
+  req: TInternalRequest
   result: T
 }
 
@@ -204,3 +200,10 @@ export type TSwaggerConfig<M extends string> = {
 }
 
 export type TDefaultExposeStrategy = 'all' | 'none'
+
+export type TInternalRequest = {
+  body?: any
+  url: string
+  method: string
+  headers: Headers
+}

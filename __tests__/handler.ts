@@ -1,15 +1,11 @@
 import * as http from 'http'
 import NextCrud from '../src/handler'
-import {
-  IAdapter,
-  IParsedQueryParams,
-  RouteType,
-  TPaginationData,
-} from '../src/types'
+import { IAdapter, RouteType, TPaginationData } from '../src/types'
 import HttpError from '../src/httpError'
 import { ApiError } from 'next/dist/server/api-utils'
 import { RequestOptions, createMocks as createHttpMocks } from 'node-mocks-http'
 import { NextApiRequest, NextApiResponse } from 'next'
+import { toRequest } from '../src/utils'
 
 const createMocks = (options: RequestOptions) => {
   const { req, res } = createHttpMocks(options)
@@ -20,6 +16,7 @@ const createMocks = (options: RequestOptions) => {
       ...res,
       send: jest.spyOn(res, 'send'),
       status: jest.spyOn(res, 'status'),
+      json: jest.spyOn(res, 'json'),
     } as unknown as NextApiResponse,
   }
 }
@@ -31,50 +28,29 @@ class NoopAdapter implements IAdapter<unknown, unknown, string> {
     this.models = models
   }
 
-  async getPaginationData(
-    resourceName: string,
-    query: unknown,
-    lastElement?: unknown
-  ): Promise<TPaginationData> {
+  async getPaginationData(): Promise<TPaginationData> {
     return {
       total: 1,
       pageCount: 1,
       page: 1,
     }
   }
-  parseQuery(resourceName: string, query?: IParsedQueryParams): unknown {
+  parseQuery(): unknown {
     return {}
   }
-  async getAll(resourceName: string, query?: unknown): Promise<unknown[]> {
+  async getAll(): Promise<unknown[]> {
     return []
   }
-  async getOne(
-    resourceName: string,
-    resourceId: string | number,
-    query?: unknown
-  ): Promise<unknown> {
+  async getOne(): Promise<unknown> {
     return {}
   }
-  async create(
-    resourceName: string,
-    data: any,
-    query?: unknown
-  ): Promise<unknown> {
+  async create(): Promise<unknown> {
     return {}
   }
-  async update(
-    resourceName: string,
-    resourceId: string | number,
-    data: any,
-    query?: unknown
-  ): Promise<unknown> {
+  async update(): Promise<unknown> {
     return {}
   }
-  async delete(
-    resourceName: string,
-    resourceId: string | number,
-    query?: unknown
-  ): Promise<unknown> {
+  async delete(): Promise<unknown> {
     return {}
   }
 
@@ -91,7 +67,7 @@ class InvalidAdapter {}
 
 const generateNoopAdapter = (
   methods: {
-    [name in keyof IAdapter<unknown, unknown>]?: (...args: any[]) => any
+    [name in keyof IAdapter<unknown, unknown>]?: (...args: unknown[]) => unknown
   },
   models: string[] = []
 ) => {
@@ -119,7 +95,7 @@ describe('Handler', () => {
     })
 
     await handler(req, res)
-    expect(res.send).toHaveBeenCalled()
+    expect(res.status).toHaveBeenCalled()
   })
 
   it('should throw an error with an invalid adapter', async () => {
@@ -157,7 +133,7 @@ describe('Handler', () => {
     })
 
     await handler(req, res)
-    expect(onRequest).toHaveBeenCalledWith(req, res, {
+    expect(onRequest).toHaveBeenCalledWith(await toRequest(req), {
       routeType: RouteType.READ_ALL,
       resourceName: 'foo',
     })
@@ -176,7 +152,7 @@ describe('Handler', () => {
     })
 
     await handler(req, res)
-    expect(onSuccess).toHaveBeenCalledWith(req, res)
+    expect(onSuccess).toHaveBeenCalledWith(await toRequest(req))
   })
 
   it('should trigger a simple Error', async () => {
@@ -198,7 +174,7 @@ describe('Handler', () => {
     })
 
     await handler(req, res)
-    expect(onError).toHaveBeenCalledWith(req, res, error)
+    expect(onError).toHaveBeenCalledWith(await toRequest(req), error)
     expect(res.status).toHaveBeenCalledWith(500)
   })
 
@@ -221,9 +197,11 @@ describe('Handler', () => {
     })
 
     await handler(req, res)
-    expect(onError).toHaveBeenCalledWith(req, res, error)
+    expect(onError).toHaveBeenCalledWith(await toRequest(req), error)
     expect(res.status).toHaveBeenCalledWith(400)
-    expect(res.send).toHaveBeenCalledWith(`${http.STATUS_CODES[400]}: Error`)
+    expect(res.json).toHaveBeenCalledWith({
+      message: `${http.STATUS_CODES[400]}: Error`,
+    })
   })
 
   it('should trigger an 400 HttpError using the default NextJS ApiError', async () => {
@@ -245,9 +223,9 @@ describe('Handler', () => {
     })
 
     await handler(req, res)
-    expect(onError).toHaveBeenCalledWith(req, res, error)
+    expect(onError).toHaveBeenCalledWith(await toRequest(req), error)
     expect(res.status).toHaveBeenCalledWith(400)
-    expect(res.send).toHaveBeenCalledWith(`Error`)
+    expect(res.json).toHaveBeenCalledWith({ message: `Error` })
   })
 
   it('should run adapter handleError upon Error', async () => {
@@ -255,7 +233,9 @@ describe('Handler', () => {
     const getOne = jest.fn(() => {
       throw error
     })
-    const handleError = jest.fn()
+    const handleError = jest.fn((e) => {
+      throw e
+    })
     const adapter = generateNoopAdapter(
       {
         getOne,
@@ -400,7 +380,7 @@ describe('Handler', () => {
         method: 'GET',
       })
       await handler(req, res)
-      expect(res.send).toHaveBeenCalledWith(data)
+      expect(res.json).toHaveBeenCalledWith(data)
     })
 
     it('should throw a 404 for a non existing resource', async () => {
@@ -416,9 +396,9 @@ describe('Handler', () => {
       })
       await handler(req, res)
       expect(res.status).toHaveBeenCalledWith(404)
-      expect(res.send).toHaveBeenCalledWith(
-        `${http.STATUS_CODES[404]}: foo bar not found`
-      )
+      expect(res.json).toHaveBeenCalledWith({
+        message: `${http.STATUS_CODES[404]}: foo bar not found`,
+      })
     })
   })
 
@@ -436,7 +416,7 @@ describe('Handler', () => {
         method: 'GET',
       })
       await handler(req, res)
-      expect(res.send).toHaveBeenCalledWith(collection)
+      expect(res.json).toHaveBeenCalledWith(collection)
     })
   })
 
@@ -454,7 +434,7 @@ describe('Handler', () => {
         method: 'POST',
       })
       await handler(req, res)
-      expect(res.send).toHaveBeenCalledWith(data)
+      expect(res.json).toHaveBeenCalledWith(data)
       expect(res.status).toHaveBeenCalledWith(201)
     })
   })
@@ -476,7 +456,7 @@ describe('Handler', () => {
         body,
       })
       await handler(req, res)
-      expect(res.send).toHaveBeenCalledWith({ ...data, ...body })
+      expect(res.json).toHaveBeenCalledWith({ ...data, ...body })
       expect(update).toHaveBeenCalledWith('foo', 'bar', body, {})
     })
 
@@ -513,7 +493,7 @@ describe('Handler', () => {
         method: 'DELETE',
       })
       await handler(req, res)
-      expect(res.send).toHaveBeenCalledWith(data)
+      expect(res.json).toHaveBeenCalledWith(data)
       expect(deleteFn).toHaveBeenCalledWith('foo', 'bar', {})
     })
 
@@ -622,7 +602,7 @@ describe('Handler', () => {
       })
 
       await handler(req, res)
-      expect(res.send).toHaveBeenCalledWith({
+      expect(res.json).toHaveBeenCalledWith({
         data: mockResources,
         pagination: {
           total: 1,

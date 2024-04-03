@@ -6,32 +6,24 @@ interface IGetOneHandler<T, Q> extends IUniqueResourceHandlerParams<T, Q> {}
 
 async function getOneHandler<T, Q>({
   adapter,
-  response,
   resourceId,
   resourceName,
   query,
   middlewares,
   request,
-}: IGetOneHandler<T, Q>): Promise<void> {
+}: IGetOneHandler<T, Q>): Promise<Awaited<T>> {
   const resource = await adapter.getOne(resourceName, resourceId, query)
 
   if (!resource) {
     throw new HttpError(404, `${resourceName} ${resourceId} not found`)
   }
 
-  await executeMiddlewares(
-    [
-      ...middlewares,
-      ({ result }) => {
-        response.send(result)
-      },
-    ],
-    {
-      req: request,
-      res: response,
-      result: resource,
-    }
-  )
+  await executeMiddlewares(middlewares, {
+    req: request,
+    result: resource,
+  })
+
+  return resource
 }
 
 export default getOneHandler

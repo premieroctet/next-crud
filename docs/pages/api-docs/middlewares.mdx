@@ -8,20 +8,12 @@ Middlewares are executed right after your data has been retrieved from the datab
 
 ```typescript
 export type TMiddlewareContext<T> = {
-  req: NextApiRequest
-  res: NextApiResponse
+  req: TInternalRequest
   result: T | T[] // the data retrieved from the database
 }
 ```
 
 - a function as the second argument, which is used to execute the next middleware in the stack.
-
-<Callout emoji="⚠️">
-  The request response is done by a middleware which is added by default at the
-  end of the middlewares stack. So it is mandatory that you call the function
-  received as your second argument, or your request will end up with no data
-  inside.
-</Callout>
 
 You can use middlewares to play with your data, for example if you want to wrap your data in a specific key you'd do the following:
 
