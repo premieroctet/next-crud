@@ -14,6 +14,7 @@ const createMocks = (options: RequestOptions) => {
     res: {
       ...res,
       send: jest.spyOn(res, 'send'),
+      json: jest.spyOn(res, 'json'),
     } as unknown as NextApiResponse,
   }
 }
@@ -56,7 +57,7 @@ describe('Prisma interraction', () => {
 
     await handler(req, res)
 
-    expect(res.send).toHaveBeenCalledWith(expectedResult)
+    expect(res.json).toHaveBeenCalledWith(expectedResult)
   })
 
   it('should get a page based paginated users list', async () => {
@@ -72,7 +73,7 @@ describe('Prisma interraction', () => {
 
     await handler(req, res)
 
-    expect(res.send).toHaveBeenCalledWith({
+    expect(res.json).toHaveBeenCalledWith({
       data: expectedResult,
       pagination: {
         total: 4,
@@ -92,7 +93,7 @@ describe('Prisma interraction', () => {
 
     await handler(req, res)
 
-    expect(res.send).toHaveBeenCalledWith(user)
+    expect(res.json).toHaveBeenCalledWith(user)
   })
 
   it('should get the list of users with only their email', async () => {
@@ -109,7 +110,7 @@ describe('Prisma interraction', () => {
 
     await handler(req, res)
 
-    expect(res.send).toHaveBeenCalledWith(expectedResult)
+    expect(res.json).toHaveBeenCalledWith(expectedResult)
   })
 
   it('should get the list of users with only their email and posts', async () => {
@@ -127,7 +128,7 @@ describe('Prisma interraction', () => {
 
     await handler(req, res)
 
-    expect(res.send).toHaveBeenCalledWith(expectedResult)
+    expect(res.json).toHaveBeenCalledWith(expectedResult)
   })
 
   it('should get the list of users with only their email and posts ids', async () => {
@@ -149,7 +150,7 @@ describe('Prisma interraction', () => {
 
     await handler(req, res)
 
-    expect(res.send).toHaveBeenCalledWith(expectedResult)
+    expect(res.json).toHaveBeenCalledWith(expectedResult)
   })
 
   it('should get the list of users with only their email, posts ids, comments and comments users', async () => {
@@ -176,7 +177,7 @@ describe('Prisma interraction', () => {
 
     await handler(req, res)
 
-    expect(res.send).toHaveBeenCalledWith(expectedResult)
+    expect(res.json).toHaveBeenCalledWith(expectedResult)
   })
 
   it('should return the first 2 users', async () => {
@@ -191,7 +192,7 @@ describe('Prisma interraction', () => {
 
     await handler(req, res)
 
-    expect(res.send).toHaveBeenCalledWith(expectedResult)
+    expect(res.json).toHaveBeenCalledWith(expectedResult)
   })
 
   it('should return 2 users after the first 2 ones', async () => {
@@ -207,7 +208,7 @@ describe('Prisma interraction', () => {
 
     await handler(req, res)
 
-    expect(res.send).toHaveBeenCalledWith(expectedResult)
+    expect(res.json).toHaveBeenCalledWith(expectedResult)
   })
 
   it('should return 2 users based on a cursor', async () => {
@@ -227,7 +228,7 @@ describe('Prisma interraction', () => {
 
     await handler(req, res)
 
-    expect(res.send).toHaveBeenCalledWith(expectedResult)
+    expect(res.json).toHaveBeenCalledWith(expectedResult)
   })
 
   it('should filter user by its email', async () => {
@@ -246,7 +247,7 @@ describe('Prisma interraction', () => {
 
     await handler(req, res)
 
-    expect(res.send).toHaveBeenCalledWith(expectedResult)
+    expect(res.json).toHaveBeenCalledWith(expectedResult)
   })
 
   it('should filter users where email does not match', async () => {
@@ -265,7 +266,7 @@ describe('Prisma interraction', () => {
 
     await handler(req, res)
 
-    expect(res.send).toHaveBeenCalledWith(expectedResult)
+    expect(res.json).toHaveBeenCalledWith(expectedResult)
   })
 
   it('should filter users where email starts with john and ends with .com', async () => {
@@ -285,7 +286,7 @@ describe('Prisma interraction', () => {
 
     await handler(req, res)
 
-    expect(res.send).toHaveBeenCalledWith(expectedResult)
+    expect(res.json).toHaveBeenCalledWith(expectedResult)
   })
 
   it('should create a user', async () => {
@@ -305,7 +306,7 @@ describe('Prisma interraction', () => {
       },
     })
 
-    expect(res.send).toHaveBeenCalledWith(expectedResult)
+    expect(res.json).toHaveBeenCalledWith(expectedResult)
   })
 
   it('should update a user', async () => {
@@ -330,7 +331,7 @@ describe('Prisma interraction', () => {
       },
     })
 
-    expect(res.send).toHaveBeenCalledWith(expectedResult)
+    expect(res.json).toHaveBeenCalledWith(expectedResult)
   })
 
   it('should update a user and respond with only its email', async () => {
@@ -358,7 +359,7 @@ describe('Prisma interraction', () => {
       },
     })
 
-    expect(res.send).toHaveBeenCalledWith(expectedResult)
+    expect(res.json).toHaveBeenCalledWith(expectedResult)
   })
 
   it('should delete the previously created user', async () => {
@@ -374,7 +375,7 @@ describe('Prisma interraction', () => {
 
     await handler(req, res)
 
-    expect(res.send).toHaveBeenCalledWith(user)
+    expect(res.json).toHaveBeenCalledWith(user)
   })
 
   afterAll(async () => {

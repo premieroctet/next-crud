@@ -1,4 +1,4 @@
-import { NextApiHandler, NextApiRequest, NextApiResponse } from 'next'
+import { NextApiRequest, NextApiResponse } from 'next'
 import {
   createHandler,
   deleteHandler,
@@ -16,6 +16,7 @@ import {
   TModelsOptions,
   TSwaggerConfig,
   TDefaultExposeStrategy,
+  TInternalRequest,
 } from './types'
 import {
   getRouteType,
@@ -25,6 +26,7 @@ import {
   applyPaginationOptions,
   getResourceNameFromUrl,
   getAccessibleRoutes,
+  toRequest,
 } from './utils'
 import {
   getModelsAccessibleRoutes,
@@ -33,21 +35,22 @@ import {
 } from './swagger/utils'
 import { ApiError } from 'next/dist/server/api-utils'
 
-type TCallback<T = undefined> = (
-  req: NextApiRequest,
-  res: NextApiResponse,
+type TCallback<T = undefined, Res = void> = (
+  req: TInternalRequest,
   options?: T
-) => void | Promise<void>
+) => Res | Promise<Res>
 type TErrorCallback = (
-  req: NextApiRequest,
-  res: NextApiResponse,
+  req: TInternalRequest,
   error: Error
 ) => void | Promise<void>
 
 interface INextCrudOptions<T, Q, M extends string = string> {
   adapter: IAdapter<T, Q, M>
   formatResourceId?: (resourceId: string) => string | number
-  onRequest?: TCallback<GetRouteType & { resourceName: string }>
+  onRequest?: TCallback<
+    GetRouteType & { resourceName: string },
+    Response | undefined
+  >
   onSuccess?: TCallback
   onError?: TErrorCallback
   middlewares?: TMiddleware<T>[]
@@ -68,6 +71,11 @@ const defaultSwaggerConfig: TSwaggerConfig<string> = {
   apiUrl: '',
 }
 
+type CrudApiHandler = (
+  req: NextApiRequest | Request,
+  res?: NextApiResponse
+) => Promise<Response | void>
+
 async function NextCrud<T, Q, M extends string = string>({
   adapter,
   models,
@@ -79,7 +87,7 @@ async function NextCrud<T, Q, M extends string = string>({
   pagination = defaultPaginationConfig,
   swagger = defaultSwaggerConfig,
   defaultExposeStrategy = 'all',
-}: INextCrudOptions<T, Q, M>): Promise<NextApiHandler<T>> {
+}: INextCrudOptions<T, Q, M>): Promise<CrudApiHandler> {
   if (
     !adapter.create ||
     !adapter.delete ||
@@ -143,10 +151,11 @@ async function NextCrud<T, Q, M extends string = string>({
     }
   }
 
-  const handler: NextApiHandler = async (req, res) => {
+  const NextCrudBaseHandler = async (
+    req: TInternalRequest
+  ): Promise<Response> => {
     if (req.url.includes(swaggerConfig.path) && swaggerConfig.enabled) {
-      res.status(200).json(swaggerJson)
-      return
+      return Response.json(swaggerJson, { status: 200 })
     }
 
     const { resourceName, modelName } = getResourceNameFromUrl(
@@ -155,10 +164,10 @@ async function NextCrud<T, Q, M extends string = string>({
     )
 
     if (!resourceName) {
-      res.status(404)
-      res.end()
-      return
+      return Response.json({ message: 'Resource not found' }, { status: 404 })
     }
+
+    let response: Response
 
     try {
       const { routeType, resourceId } = getRouteType({
@@ -167,11 +176,15 @@ async function NextCrud<T, Q, M extends string = string>({
         resourceName,
       })
 
-      await onRequest?.(req, res, {
+      const onRequestResponse = await onRequest?.(req, {
         routeType,
         resourceId,
         resourceName,
       })
+
+      if (onRequestResponse) {
+        return onRequestResponse
+      }
 
       const modelConfig = models?.[modelName]
 
@@ -182,8 +195,7 @@ async function NextCrud<T, Q, M extends string = string>({
       )
 
       if (!accessibleRoutes.includes(routeType)) {
-        res.status(404).end()
-        return
+        return Response.json({ message: 'Resource not found' }, { status: 404 })
       }
 
       const parsedQuery = parseQuery(req.url.split('?')[1])
@@ -201,7 +213,6 @@ async function NextCrud<T, Q, M extends string = string>({
 
       const params: IHandlerParams<T, Q> = {
         request: req,
-        response: res,
         adapter,
         query: adapter.parseQuery(modelName as M, parsedQuery),
         middlewares,
@@ -215,35 +226,51 @@ async function NextCrud<T, Q, M extends string = string>({
       const executeCrud = async () => {
         try {
           switch (routeType) {
-            case RouteType.READ_ONE:
-              await getOneHandler({
+            case RouteType.READ_ONE: {
+              const data = await getOneHandler({
                 ...params,
                 resourceId: resourceIdFormatted,
               })
+
+              response = Response.json(data, { status: 200 })
               break
+            }
             case RouteType.READ_ALL: {
-              await getAllHandler<T, Q>({
+              const data = await getAllHandler<T, Q>({
                 ...params,
                 paginated: isPaginated,
               })
+              response = Response.json(data, { status: 200 })
               break
             }
-            case RouteType.CREATE:
-              await createHandler<T, Q>({ ...params, body: req.body })
+            case RouteType.CREATE: {
+              const data = await createHandler<T, Q>({
+                ...params,
+                body: req.body as Partial<T>,
+              })
+
+              response = Response.json(data, { status: 201 })
               break
-            case RouteType.UPDATE:
-              await updateHandler<T, Q>({
+            }
+            case RouteType.UPDATE: {
+              const data = await updateHandler<T, Q>({
                 ...params,
                 resourceId: resourceIdFormatted,
-                body: req.body,
+                body: req.body as Partial<T>,
               })
+
+              response = Response.json(data, { status: 200 })
               break
-            case RouteType.DELETE:
-              await deleteHandler<T, Q>({
+            }
+            case RouteType.DELETE: {
+              const data = await deleteHandler<T, Q>({
                 ...params,
                 resourceId: resourceIdFormatted,
               })
+
+              response = Response.json(data, { status: 200 })
               break
+            }
           }
         } catch (e) {
           if (adapter.handleError && !(e instanceof ApiError)) {
@@ -258,17 +285,42 @@ async function NextCrud<T, Q, M extends string = string>({
 
       await executeCrud()
 
-      await onSuccess?.(req, res)
+      await onSuccess?.(req)
     } catch (e) {
-      await onError?.(req, res, e)
+      await onError?.(req, e)
       if (e instanceof ApiError) {
-        res.status(e.statusCode).send(e.message)
+        response = Response.json(
+          { message: e.message },
+          { status: e.statusCode }
+        )
       } else {
-        res.status(500).send(e.message)
+        response = Response.json({ message: e.message }, { status: 500 })
       }
     } finally {
       await adapter.disconnect?.()
-      res.end()
+    }
+
+    return response
+  }
+
+  const handler = async (
+    req: NextApiRequest | Request,
+    res?: NextApiResponse
+  ) => {
+    if (res) {
+      const response = await NextCrudBaseHandler(
+        await toRequest(req as NextApiRequest)
+      )
+
+      const bodyResponse = await response.json()
+
+      return res.status(response.status).json(bodyResponse)
+    } else {
+      const response = await NextCrudBaseHandler(
+        await toRequest(req as Request)
+      )
+
+      return response
     }
   }
   return handler
