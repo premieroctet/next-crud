@@ -30,7 +30,7 @@ export const getRouteType = ({
   resourceName,
 }: GetRouteTypeParams): GetRouteType | null => {
   // Exclude the query params from the path
-  const realPath = url.split('?')[0]
+  const realPath = (url.startsWith("http")) ? new URL(url).pathname : url.split('?')[0]
 
   if (!realPath.includes(`/${resourceName}`)) {
     throw new Error(
