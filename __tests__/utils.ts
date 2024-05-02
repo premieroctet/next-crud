@@ -172,6 +172,18 @@ describe('getRouteType with query params', () => {
     })
   })
 
+  it('should return CREATE type for full URL', () => {
+    expect(
+      getRouteType({
+        method: 'POST',
+        url: 'http://localhost:3000/api/users?q=1',
+        resourceName: 'users',
+      })
+    ).toEqual<GetRouteType>({
+      routeType: RouteType.CREATE,
+    })
+  })
+
   it('should return UPDATE type', () => {
     expect(
       getRouteType({
