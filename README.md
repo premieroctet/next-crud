@@ -63,3 +63,7 @@ And get your full featured CRUD routes!
 # Contributing
 
 You can run the example project to test your modifications. Make sure to run `yarn watch` in the root folder.
+
+# Sponsors
+
+This project is being developed by [Premier Octet](https://www.premieroctet.com), a Web and mobile agency specializing in React and React Native developments.
